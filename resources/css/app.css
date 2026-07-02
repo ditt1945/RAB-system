@@ -1,0 +1,289 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Great+Vibes&family=Signika:wght@400;600;700&display=swap');
+
+/*
+ * Application Tailwind entrypoint and shared design system tokens.
+ * This file defines reusable UI components for the design language.
+ */
+
+:root {
+    color-scheme: light;
+    color: #17211f;
+    background-color: #f4f7f6;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --background: #ffffff;
+    --foreground: #000000;
+    --text-primary: #000000;
+    --text-secondary: #666666;
+    --elegant-font: 'Great Vibes';
+    --vh: 1vh;
+    --app-height: 100%;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: #f4f7f6;
+    color: #17211f;
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    body {
+        @apply bg-softCloud text-ink antialiased;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    p, span, label, button, input, textarea, select {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+}
+
+@layer components {
+    .panel {
+        @apply rounded-md border border-hairlineSoft bg-canvas shadow-sm shadow-slate-900/5;
+    }
+
+    .panel-strong {
+        @apply rounded-md border border-hairlineSoft bg-white shadow-sm shadow-slate-900/5;
+    }
+
+    .surface-band {
+        @apply border-b border-hairlineSoft bg-white/80 backdrop-blur;
+    }
+
+    .page-title {
+        @apply text-heading-xl font-semibold text-ink;
+    }
+
+    .section-title {
+        @apply text-heading-md font-semibold text-ink;
+    }
+
+    .section-copy {
+        @apply text-body-md text-ash;
+    }
+
+    .btn-primary {
+        @apply inline-flex min-h-10 items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-onPrimary transition hover:bg-charcoal focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .btn-secondary {
+        @apply inline-flex min-h-10 items-center justify-center rounded-md border border-hairlineSoft bg-white px-4 py-2.5 text-sm font-semibold text-ink transition hover:border-hairline hover:bg-field focus:outline-none focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .btn-accent {
+        @apply inline-flex items-center justify-center rounded-md bg-info px-4 py-2.5 text-sm font-semibold text-onPrimary transition hover:bg-infoDeep disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .btn-success {
+        @apply inline-flex items-center justify-center rounded-md bg-success px-4 py-2.5 text-sm font-semibold text-onPrimary transition hover:bg-successBright disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .btn-danger {
+        @apply inline-flex items-center justify-center rounded-md bg-sale px-4 py-2.5 text-sm font-semibold text-onPrimary transition hover:bg-saleDeep disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .input-field {
+        @apply w-full rounded-md border border-hairlineSoft bg-canvas px-3.5 py-2.5 text-sm text-ink outline-none transition placeholder:text-stone focus:border-primary focus:ring-2 focus:ring-primary/15;
+    }
+
+    .textarea-field {
+        @apply w-full rounded-md border border-hairlineSoft bg-canvas px-3.5 py-2.5 text-sm text-ink outline-none transition placeholder:text-stone focus:border-info focus:ring-2 focus:ring-info/15;
+    }
+
+    .table-surface {
+        @apply min-w-full divide-y divide-hairlineSoft bg-white;
+    }
+
+    .table-heading {
+        @apply bg-field text-xs uppercase tracking-[0.12em] text-mute;
+    }
+
+    .badge-status {
+        @apply inline-flex items-center rounded-sm px-2.5 py-1 text-xs font-semibold;
+    }
+
+    .form-label {
+        @apply mb-1.5 block text-sm font-semibold text-ink;
+    }
+
+    .form-error {
+        @apply mt-1.5 text-sm text-sale;
+    }
+
+    .content-shell {
+        @apply mx-auto max-w-7xl space-y-6;
+    }
+
+    .form-shell {
+        @apply mx-auto max-w-4xl;
+    }
+
+    .table-actions {
+        @apply flex flex-wrap justify-end gap-2;
+    }
+
+    .badge-planning {
+        @apply bg-blueSoft text-infoDeep;
+    }
+
+    .badge-progress {
+        @apply bg-amberSoft text-warning;
+    }
+
+    .badge-completed {
+        @apply bg-success text-onPrimary;
+    }
+
+    .badge-cancelled {
+        @apply bg-orange-100 text-saleDeep;
+    }
+
+    .metric-label {
+        @apply text-xs font-semibold uppercase tracking-[0.12em] text-mute;
+    }
+
+    .metric-value {
+        @apply mt-2 break-words text-2xl font-semibold text-ink;
+    }
+
+    .focus-row {
+        @apply transition hover:bg-field/70;
+    }
+
+    .card-grid {
+        @apply grid gap-6;
+    }
+
+    .skeleton-block {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(100deg, #eeeeef 0%, #f7f7f8 42%, #e7e7e8 72%);
+        background-size: 220% 100%;
+        box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.42);
+    }
+
+    .skeleton-block::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.68), transparent);
+        animation: skeleton-shimmer 1.65s ease-in-out infinite;
+    }
+}
+
+@layer utilities {
+    @keyframes bounce-x {
+        0%, 100% {
+            transform: translateX(-4px);
+        }
+        50% {
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes glow {
+        0%, 100% {
+            opacity: 0.6;
+            filter: drop-shadow(0 0 2px rgb(255 255 255 / 0.3));
+        }
+        50% {
+            opacity: 1;
+            filter: drop-shadow(0 0 8px rgb(255 255 255 / 0.5));
+        }
+    }
+
+    @keyframes float-up {
+        0% {
+            opacity: 0;
+            transform: translateY(6px);
+            filter: blur(2px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+        }
+    }
+
+    @keyframes pulse-ring {
+        0% {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+        50% {
+            opacity: 0.5;
+        }
+        100% {
+            transform: scale(1.5);
+            opacity: 0;
+        }
+    }
+
+    @keyframes skeleton-shimmer {
+        100% {
+            transform: translateX(100%);
+        }
+    }
+
+    .lighting-button {
+        animation: bounce-x 1.5s ease-in-out infinite;
+    }
+
+    .lighting-button:hover {
+        animation: none;
+        transform: translateX(0);
+    }
+
+    .light-glow {
+        animation: glow 2s ease-in-out infinite;
+    }
+
+    .word-float {
+        animation: float-up 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        backface-visibility: hidden;
+        transform-style: preserve-3d;
+        will-change: transform, opacity, filter;
+    }
+
+    .pulse-ring {
+        animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .animate-fade-in {
+        animation: simpleFadeIn 0.3s ease-out forwards;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .skeleton-block::after {
+            animation: none;
+        }
+    }
+}
