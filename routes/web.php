@@ -30,7 +30,7 @@ Route::get('/', function () {
 });
 
 Route::get('/house-estimate', [\App\Http\Controllers\HouseEstimateController::class, 'index'])
-    ->name('house.estimate');
+    ->name('house.estimate.index');
 
 Route::post('/house-estimate', [\App\Http\Controllers\HouseEstimateController::class, 'store'])
     ->name('house.estimate.store');
@@ -46,6 +46,15 @@ Route::post('/house-quotation', [\App\Http\Controllers\HouseEstimateController::
 
 Route::get('/house-quotation/success/{id}', [\App\Http\Controllers\HouseEstimateController::class, 'quotationSuccess'])
     ->name('house.quotation.success');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/house-estimations', [\App\Http\Controllers\HouseEstimateController::class, 'history'])
+        ->name('house.estimations.history');
+    Route::delete('/house-estimations/{id}', [\App\Http\Controllers\HouseEstimateController::class, 'deleteEstimation'])
+        ->name('house.estimations.delete');
+    Route::get('/house-dashboard', [\App\Http\Controllers\HouseEstimateController::class, 'dashboard'])
+        ->name('house.dashboard');
+});
 
 /*
 |--------------------------------------------------------------------------

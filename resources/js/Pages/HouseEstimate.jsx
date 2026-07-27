@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { formatCurrency } from '@/Utils/formatters';
 
 const featureOptions = [
@@ -9,7 +9,8 @@ const featureOptions = [
     { key: 'kanopi', label: 'Kanopi' },
 ];
 
-export default function HouseEstimate({ estimate = null, form: initialForm = {} }) {
+export default function HouseEstimate({ estimate = null, estimation = null, form: initialForm = {} }) {
+    const { auth } = usePage().props;
     const form = useForm({
         house_type: initialForm.house_type || '',
         floor_area: initialForm.floor_area || '',
@@ -41,9 +42,16 @@ export default function HouseEstimate({ estimate = null, form: initialForm = {} 
                             <p className="text-sm uppercase tracking-[0.36em] text-mute">Estimasi Biaya Rumah</p>
                             <h1 className="mt-4 text-heading-xl font-semibold text-ink">Hitung biaya bangun rumah dengan cepat.</h1>
                             <p className="mt-4 text-body-md text-ash">Isi data rumah Anda dan dapatkan estimasi biaya awal yang mudah dipahami. Cocok untuk calon pemilik rumah yang ingin tahu perkiraan anggaran.</p>
-                            <Link href={route('house.packages')} className="btn-secondary mt-6 inline-flex w-full max-w-max px-6 py-3 text-sm font-semibold sm:w-auto">
-                                Lihat Paket dan Perbandingan
-                            </Link>
+                            <div className="flex gap-3 mt-6 flex-wrap">
+                                <Link href={route('house.packages')} className="btn-secondary inline-flex max-w-max px-6 py-3 text-sm font-semibold">
+                                    Lihat Paket dan Perbandingan
+                                </Link>
+                                {auth.user && (
+                                    <Link href={route('house.estimations.history')} className="btn-outline inline-flex max-w-max px-6 py-3 text-sm font-semibold">
+                                        📋 Riwayat Estimasi
+                                    </Link>
+                                )}
+                            </div>
                         </div>
 
                         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px]">
@@ -319,7 +327,7 @@ export default function HouseEstimate({ estimate = null, form: initialForm = {} 
                                         </div>
                                     )}
 
-                                    <div className="grid gap-3 sm:grid-cols-3">
+                                    <div className="grid gap-3 sm:grid-cols-4">
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -341,6 +349,18 @@ export default function HouseEstimate({ estimate = null, form: initialForm = {} 
                                         <Link href={route('house.quotation')} className="btn-primary text-center">
                                             💌 Minta Penawaran
                                         </Link>
+                                        {auth.user && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    alert('Estimasi telah disimpan ke akun Anda. Lihat di Riwayat Estimasi');
+                                                    window.location.href = route('house.estimations.history');
+                                                }}
+                                                className="btn-secondary"
+                                            >
+                                                💾 Sudah Disimpan
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </section>
