@@ -33,6 +33,12 @@ export default function Welcome({ auth, canLogin, canRegister, laravelVersion, p
                                         )}
                                     </>
                                 )}
+                                <Link href={route('house.estimate')} className="btn-outline-on-image">
+                                    Hitung Estimasi Rumah
+                                </Link>
+                                <Link href={route('house.packages')} className="btn-secondary">
+                                    Lihat Paket Rumah
+                                </Link>
                             </div>
                         </div>
 
@@ -69,7 +75,7 @@ export default function Welcome({ auth, canLogin, canRegister, laravelVersion, p
                     </div>
 
                     <footer className="mt-16 border-t border-hairlineSoft pt-8 text-sm text-mute">
-                        RAB System - Laravel v{laravelVersion ?? ''} - PHP v{phpVersion ?? ''}
+                        RAB System 
                     </footer>
                 </div>
             </div>

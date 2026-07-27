@@ -33,6 +33,80 @@ class GeminiService
         return $this->parseAssistantAnswer($text);
     }
 
+    public function estimateHouse(array $houseData): array
+    {
+        $prompt = $this->buildHouseEstimatePrompt($houseData);
+        $text = $this->generateJson($prompt, 0.4);
+
+        return $this->parseHouseEstimate($text);
+    }
+
+    private function buildHouseEstimatePrompt(array $houseData): string
+    {
+        $payload = json_encode($houseData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+        return <<<PROMPT
+Kamu adalah estimator kontraktor Indonesia.
+Buat estimasi biaya rumah tinggal berdasarkan data berikut.
+
+DATA:
+{$payload}
+
+Balas hanya JSON valid tanpa markdown, tanpa penjelasan, dengan struktur:
+{
+  "summary": "ringkasan singkat estimasi",
+  "total_estimate": 850000000,
+  "breakdown": [
+    {
+      "name": "Struktur",
+      "amount": 320000000
+    }
+  ],
+  "notes": [
+    "catatan tambahan"
+  ]
+}
+
+Aturan:
+- Total estimasi harus dalam angka bulat Rupiah.
+- Breakdown harus berisi 4 sampai 6 kategori biaya utama.
+- Gunakan bahasa Indonesia yang langsung dan praktis.
+- Sertakan opsi tambahan yang dipilih dalam rekomendasi biaya jika ada.
+- Jika data belum lengkap, tambahkan catatan singkat di notes.
+- Jangan tambahkan penjelasan lain selain JSON.
+PROMPT;
+    }
+
+    private function parseHouseEstimate(string $text): array
+    {
+        $decoded = $this->decodeJson($text);
+
+        if (! is_array($decoded)) {
+            throw new RuntimeException('Response estimasi rumah bukan JSON valid.');
+        }
+
+        $breakdown = collect($decoded['breakdown'] ?? [])
+            ->filter(fn ($item) => is_array($item))
+            ->map(fn ($item) => [
+                'name' => (string) ($item['name'] ?? ''),
+                'amount' => (int) ($item['amount'] ?? 0),
+            ])
+            ->values()
+            ->all();
+
+        $notes = collect($decoded['notes'] ?? [])
+            ->filter(fn ($note) => is_string($note) && $note !== '')
+            ->values()
+            ->all();
+
+        return [
+            'summary' => (string) ($decoded['summary'] ?? ''),
+            'total_estimate' => (int) ($decoded['total_estimate'] ?? 0),
+            'breakdown' => $breakdown,
+            'notes' => $notes,
+        ];
+    }
+
     private function generateJson(string $prompt, float $temperature): string
     {
         $apiKey = trim((string) config('services.gemini.api_key'));

@@ -29,6 +29,24 @@ Route::get('/', function () {
     ]);
 });
 
+Route::get('/house-estimate', [\App\Http\Controllers\HouseEstimateController::class, 'index'])
+    ->name('house.estimate');
+
+Route::post('/house-estimate', [\App\Http\Controllers\HouseEstimateController::class, 'store'])
+    ->name('house.estimate.store');
+
+Route::get('/house-packages', [\App\Http\Controllers\HouseEstimateController::class, 'packages'])
+    ->name('house.packages');
+
+Route::get('/house-quotation', [\App\Http\Controllers\HouseEstimateController::class, 'quotation'])
+    ->name('house.quotation');
+
+Route::post('/house-quotation', [\App\Http\Controllers\HouseEstimateController::class, 'storeQuotation'])
+    ->name('house.quotation.store');
+
+Route::get('/house-quotation/success/{id}', [\App\Http\Controllers\HouseEstimateController::class, 'quotationSuccess'])
+    ->name('house.quotation.success');
+
 /*
 |--------------------------------------------------------------------------
 | DASHBOARD
