@@ -23,7 +23,7 @@ export default function HouseQuotation() {
                 <div className="mx-auto max-w-3xl px-6 py-16 lg:px-8">
                     <div className="space-y-8">
                         <div className="max-w-2xl">
-                            <Link href={route('house.estimate')} className="btn-secondary mb-6 inline-flex">
+                            <Link href={route('house.estimate.index')} className="btn-secondary mb-6 inline-flex">
                                 ← Kembali ke Estimasi
                             </Link>
                             <p className="text-sm uppercase tracking-[0.36em] text-mute">Hubungi Kami</p>
@@ -72,7 +72,7 @@ export default function HouseQuotation() {
                                                 value={form.phone}
                                                 onChange={(e) => form.setData('phone', e.target.value)}
                                                 className="input"
-                                                placeholder="+62 812 3456 7890"
+                                                placeholder="+62 853 2661 0706"
                                                 required
                                             />
                                             {form.errors.phone && <p className="text-sm text-red-600">{form.errors.phone}</p>}
@@ -117,17 +117,17 @@ export default function HouseQuotation() {
                                     <div>
                                         <p className="text-sm uppercase tracking-[0.24em] text-mute">Atau hubungi langsung</p>
                                         <div className="mt-4 space-y-3">
-                                            <a href="tel:+628123456789" className="flex items-start gap-3 rounded-lg p-3 hover:bg-softCloud transition">
+                                            <a href="tel:+6285326610706" className="flex items-start gap-3 rounded-lg p-3 hover:bg-softCloud transition">
                                                 <span className="text-lg">📞</span>
-                                                <span className="text-body-md text-ink">+62 812 3456 7890</span>
+                                                <span className="text-body-md text-ink">+62 853 2661 0706</span>
                                             </a>
-                                            <a href="https://wa.me/628123456789" target="_blank" rel="noreferrer" className="flex items-start gap-3 rounded-lg p-3 hover:bg-softCloud transition">
+                                            <a href="https://wa.me/6285326610706" target="_blank" rel="noreferrer" className="flex items-start gap-3 rounded-lg p-3 hover:bg-softCloud transition">
                                                 <span className="text-lg">💬</span>
                                                 <span className="text-body-md text-ink">WhatsApp</span>
                                             </a>
-                                            <a href="mailto:info@example.com" className="flex items-start gap-3 rounded-lg p-3 hover:bg-softCloud transition">
+                                            <a href="mailto:raditvitsava@gmail.com" className="flex items-start gap-3 rounded-lg p-3 hover:bg-softCloud transition">
                                                 <span className="text-lg">✉️</span>
-                                                <span className="text-body-md text-ink">info@example.com</span>
+                                                <span className="text-body-md text-ink">raditvitsava@gmail.com</span>
                                             </a>
                                         </div>
                                     </div>

@@ -76,6 +76,7 @@ class AnalyticsService
         EstimationAnalytic::updateOrCreate(
             ['user_id' => $user->id, 'metric_type' => 'avg_floor_area'],
             [
+                'data' => ['floor_area' => $avgFloorArea],
                 'average' => $avgFloorArea,
                 'count' => $estimations->count(),
             ]

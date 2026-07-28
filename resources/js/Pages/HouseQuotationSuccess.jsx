@@ -1,80 +1,81 @@
 import { Head, Link } from '@inertiajs/react';
+import { CheckCircle, Home, MessageCircle, Phone } from 'lucide-react';
 
 export default function HouseQuotationSuccess({ quotation }) {
-    const formatDate = (date) => {
-        return new Date(date).toLocaleDateString('id-ID', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    };
+    const formatDate = (date) => new Date(date).toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
 
     return (
         <>
             <Head title="Penawaran Terkirim" />
-            <div className="min-h-screen bg-softCloud text-ink flex items-center justify-center px-6 py-16">
-                <div className="max-w-2xl w-full">
-                    <div className="panel p-8 lg:p-12 text-center">
-                        <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-                            <span className="text-4xl">✅</span>
-                        </div>
-
-                        <h1 className="text-heading-xl font-semibold text-ink">Penawaran Terkirim!</h1>
-                        <p className="mt-4 text-body-md text-ash max-w-lg mx-auto">
-                            Terima kasih, <strong>{quotation.name}</strong>. Tim kami telah menerima permintaan penawaran Anda dan akan segera menghubungi melalui nomor atau email yang Anda berikan.
+            <div className="flex min-h-screen items-center justify-center bg-softCloud px-6 py-12 text-ink">
+                <main className="w-full max-w-3xl">
+                    <section className="panel-strong p-6 text-center sm:p-10">
+                        <CheckCircle className="mx-auto h-16 w-16 text-success" />
+                        <p className="mt-6 text-sm uppercase tracking-[0.24em] text-mute">Permintaan terkirim</p>
+                        <h1 className="mt-3 text-heading-xl font-semibold text-ink">Terima kasih, {quotation.name}.</h1>
+                        <p className="mx-auto mt-4 max-w-xl text-body-md text-ash">
+                            Tim sudah menerima request penawaran Anda. Kami akan menghubungi lewat WhatsApp, telepon, atau email untuk validasi kebutuhan proyek.
                         </p>
 
-                        <div className="mt-8 space-y-4">
-                            <div className="rounded-2xl border border-hairlineSoft bg-white px-6 py-4">
-                                <p className="text-sm uppercase tracking-[0.24em] text-mute">Nomor Referensi</p>
-                                <p className="mt-2 text-heading-md font-semibold text-ink">#{quotation.id}</p>
-                            </div>
-
-                            <div className="rounded-2xl border border-hairlineSoft bg-white px-6 py-4">
-                                <p className="text-sm uppercase tracking-[0.24em] text-mute">Email Anda</p>
-                                <p className="mt-2 text-body-md text-ink">{quotation.email}</p>
-                            </div>
-
-                            <div className="rounded-2xl border border-hairlineSoft bg-white px-6 py-4">
-                                <p className="text-sm uppercase tracking-[0.24em] text-mute">Waktu Pengiriman</p>
-                                <p className="mt-2 text-body-md text-ink">{formatDate(quotation.created_at)}</p>
-                            </div>
+                        <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                            <InfoBox label="Referensi" value={`#${quotation.id}`} />
+                            <InfoBox label="Email" value={quotation.email} />
+                            <InfoBox label="Dikirim" value={formatDate(quotation.created_at)} />
                         </div>
 
-                        <div className="mt-8 border-t border-hairlineSoft pt-8">
-                            <p className="text-body-md text-ash mb-6">Selanjutnya, Anda bisa:</p>
-                            <div className="space-y-3">
-                                <Link href={route('house.estimate')} className="btn-secondary w-full">
-                                    Hitung Estimasi Lain
-                                </Link>
-                                <Link href={route('house.packages')} className="btn-outline w-full">
-                                    Lihat Paket Lain
-                                </Link>
-                            </div>
+                        <div className="mt-8 rounded-md border border-hairlineSoft bg-softCloud p-5 text-left">
+                            <p className="font-semibold text-ink">Langkah berikutnya</p>
+                            <ol className="mt-3 space-y-2 text-sm text-ash">
+                                <li>1. Tim mengecek data lokasi dan kebutuhan awal.</li>
+                                <li>2. Anda akan dihubungi untuk melengkapi detail rumah.</li>
+                                <li>3. Estimasi awal divalidasi menjadi penawaran yang lebih akurat.</li>
+                            </ol>
                         </div>
 
-                        <div className="mt-8 pt-8 border-t border-hairlineSoft">
-                            <p className="text-sm text-mute mb-4">Ada pertanyaan atau butuh bantuan cepat?</p>
-                            <div className="flex flex-wrap gap-3 justify-center">
-                                <a href="tel:+628123456789" className="btn-secondary">
-                                    📞 Hubungi Kami
-                                </a>
-                                <a href="https://wa.me/628123456789" target="_blank" rel="noreferrer" className="btn-secondary">
-                                    💬 WhatsApp
-                                </a>
-                            </div>
+                        <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                            <Link href={route('house.estimate.index')} className="btn-secondary">
+                                Hitung Estimasi Lain
+                            </Link>
+                            <Link href={route('house.packages')} className="btn-outline">
+                                Lihat Paket Rumah
+                            </Link>
                         </div>
-                    </div>
 
-                    <div className="mt-8 text-center">
-                        <Link href={route('home')} className="text-ink hover:text-ash transition">
-                            ← Kembali ke Beranda
+                        <div className="mt-8 flex flex-wrap justify-center gap-3 border-t border-hairlineSoft pt-8">
+                            <a href="https://wa.me/6285326610706" target="_blank" rel="noreferrer" className="btn-primary">
+                                <MessageCircle className="mr-2 h-4 w-4" />
+                                WhatsApp
+                            </a>
+                            <a href="tel:+6285326610706" className="btn-secondary">
+                                <Phone className="mr-2 h-4 w-4" />
+                                Telepon
+                            </a>
+                        </div>
+                    </section>
+
+                    <div className="mt-6 text-center">
+                        <Link href="/" className="inline-flex items-center text-sm font-semibold text-primary hover:text-ink">
+                            <Home className="mr-2 h-4 w-4" />
+                            Kembali ke Beranda
                         </Link>
                     </div>
-                </div>
+                </main>
             </div>
         </>
+    );
+}
+
+function InfoBox({ label, value }) {
+    return (
+        <div className="rounded-md border border-hairlineSoft bg-white px-4 py-3">
+            <p className="text-xs uppercase tracking-[0.14em] text-mute">{label}</p>
+            <p className="mt-2 break-words text-sm font-semibold text-ink">{value}</p>
+        </div>
     );
 }

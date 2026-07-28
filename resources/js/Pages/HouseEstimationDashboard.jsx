@@ -1,231 +1,173 @@
-import React from 'react';
-import { Head, Link, usePage } from '@inertiajs/react';
-import { formatCurrency } from '@/Utilities/formatCurrency';
+import { Head, Link } from '@inertiajs/react';
+import { BarChart3, FileText, Lightbulb, Plus, Sparkles, TrendingUp } from 'lucide-react';
+import { formatCurrency } from '@/Utils/formatters';
 
-export default function HouseEstimationDashboard({ analytics, trends, recommendations }) {
-    const { auth } = usePage().props;
-
-    const formatPercentage = (value) => {
-        return Math.round(value * 100) / 100;
-    };
+export default function HouseEstimationDashboard({ analytics = {}, trends = {}, recommendations = {} }) {
+    const qualityEntries = Object.entries(analytics.quality_distribution || {});
+    const featureEntries = Object.entries(analytics.popular_features || {})
+        .sort(([, first], [, second]) => second - first);
+    const totalEstimations = Number(analytics.total_estimations || 0);
+    const favoritePackage = qualityEntries
+        .sort(([, first], [, second]) => second - first)
+        .at(0)?.[0] || '-';
 
     return (
         <>
-            <Head title="Dashboard - Estimasi Rumah" />
-            <div className="min-h-screen bg-gradient-to-br from-softCloud to-white p-6">
-                <div className="max-w-7xl mx-auto">
-                    {/* Header */}
-                    <div className="mb-8">
-                        <h1 className="text-4xl font-bold text-ink mb-2">
-                            📊 Dashboard Estimasi Rumah Anda
-                        </h1>
-                        <p className="text-mute text-lg">
-                            Analisis preferensi dan rekomendasi personal untuk rumah impian Anda
-                        </p>
-                    </div>
-
-                    {/* Quick Links */}
-                    <div className="flex gap-3 mb-8 flex-wrap">
-                        <Link
-                            href={route('house.estimate.index')}
-                            className="btn-primary inline-block px-6 py-3 text-sm font-semibold"
-                        >
-                            + Estimasi Baru
-                        </Link>
-                        <Link
-                            href={route('house.estimations.history')}
-                            className="btn-secondary inline-block px-6 py-3 text-sm font-semibold"
-                        >
-                            📋 Riwayat
-                        </Link>
-                    </div>
-
-                    {/* Analytics Overview */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-teal-600">
-                            <p className="text-mute text-sm mb-2">Total Estimasi</p>
-                            <p className="text-3xl font-bold text-ink">{analytics.total_estimations}</p>
-                            <p className="text-xs text-ash mt-2">estimasi yang telah dibuat</p>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-tealSoft">
-                            <p className="text-mute text-sm mb-2">Rata-rata Biaya/m²</p>
-                            <p className="text-3xl font-bold text-ink">
-                                {formatCurrency(analytics.avg_cost_per_m2)}
+            <Head title="Dashboard Estimasi Rumah" />
+            <div className="min-h-screen bg-softCloud px-6 py-12 text-ink">
+                <div className="mx-auto max-w-7xl">
+                    <header className="flex flex-col gap-5 border-b border-hairlineSoft pb-8 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <p className="text-sm uppercase tracking-[0.24em] text-mute">Ringkasan akun</p>
+                            <h1 className="mt-3 text-heading-xl font-semibold text-ink">Dashboard estimasi rumah.</h1>
+                            <p className="mt-3 max-w-2xl text-body-md text-ash">
+                                Pantau pola budget, paket yang sering dipilih, dan rekomendasi praktis dari riwayat estimasi Anda.
                             </p>
-                            <p className="text-xs text-ash mt-2">biaya standar Anda</p>
                         </div>
-
-                        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-ink">
-                            <p className="text-mute text-sm mb-2">Rata-rata Luas Bangunan</p>
-                            <p className="text-3xl font-bold text-ink">
-                                {formatPercentage(analytics.avg_floor_area)}
-                            </p>
-                            <p className="text-xs text-ash mt-2">m² per estimasi</p>
+                        <div className="flex flex-wrap gap-2">
+                            <Link href={route('house.estimate.index')} className="btn-primary">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Estimasi Baru
+                            </Link>
+                            <Link href={route('house.estimations.history')} className="btn-secondary">
+                                <FileText className="mr-2 h-4 w-4" />
+                                Riwayat
+                            </Link>
                         </div>
+                    </header>
 
-                        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-ash">
-                            <p className="text-mute text-sm mb-2">Paket Favorit</p>
-                            <p className="text-3xl font-bold text-ink capitalize">
-                                {analytics.quality_distribution && 
-                                    Object.entries(analytics.quality_distribution)
-                                        .sort(([,a], [,b]) => b - a)
-                                        .at(0)?.[0] || '-'}
-                            </p>
-                            <p className="text-xs text-ash mt-2">pilihan terbanyak Anda</p>
-                        </div>
-                    </div>
+                    <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                        <MetricCard label="Total estimasi" value={totalEstimations} copy="Estimasi tersimpan" icon={BarChart3} />
+                        <MetricCard label="Rata-rata biaya/m2" value={formatCurrency(analytics.avg_cost_per_m2 || 0)} copy="Patokan budget awal" icon={TrendingUp} />
+                        <MetricCard label="Rata-rata luas" value={`${Math.round(Number(analytics.avg_floor_area || 0))} m2`} copy="Ukuran yang sering dihitung" icon={FileText} />
+                        <MetricCard label="Paket favorit" value={favoritePackage} copy="Pilihan terbanyak" icon={Sparkles} capitalize />
+                    </section>
 
-                    {/* Quality Distribution */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        {/* Quality Breakdown */}
-                        <div className="bg-white rounded-lg shadow p-6">
-                            <h2 className="text-xl font-bold text-ink mb-4">📦 Distribusi Paket</h2>
-                            <div className="space-y-4">
-                                {Object.entries(analytics.quality_distribution || {}).length > 0 ? (
-                                    Object.entries(analytics.quality_distribution).map(([quality, count]) => (
-                                        <div key={quality}>
-                                            <div className="flex justify-between mb-2">
-                                                <span className="text-sm font-semibold capitalize text-ink">{quality}</span>
-                                                <span className="text-sm text-mute">{count} estimasi</span>
+                    <section className="mt-8 grid gap-6 lg:grid-cols-2">
+                        <Panel title="Distribusi paket" copy="Komposisi pilihan kualitas dari estimasi yang pernah dibuat.">
+                            {qualityEntries.length > 0 ? (
+                                <div className="space-y-4">
+                                    {qualityEntries.map(([quality, count]) => {
+                                        const percentage = totalEstimations > 0 ? Math.round((count / totalEstimations) * 100) : 0;
+
+                                        return (
+                                            <div key={quality}>
+                                                <div className="flex items-center justify-between gap-4 text-sm">
+                                                    <span className="font-semibold capitalize text-ink">{quality}</span>
+                                                    <span className="text-ash">{count} estimasi</span>
+                                                </div>
+                                                <div className="mt-2 h-2 rounded-full bg-field">
+                                                    <div className="h-2 rounded-full bg-primary" style={{ width: `${percentage}%` }} />
+                                                </div>
                                             </div>
-                                            <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                                                <div
-                                                    className={`h-full ${
-                                                        quality === 'hemat' ? 'bg-blue-400' :
-                                                        quality === 'standar' ? 'bg-teal-500' :
-                                                        'bg-purple-500'
-                                                    }`}
-                                                    style={{ width: `${(count / analytics.total_estimations * 100) || 0}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-ash">Belum ada estimasi</p>
-                                )}
-                            </div>
-                        </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <EmptyText>Belum ada data paket.</EmptyText>
+                            )}
+                        </Panel>
 
-                        {/* Popular Features */}
-                        <div className="bg-white rounded-lg shadow p-6">
-                            <h2 className="text-xl font-bold text-ink mb-4">⭐ Fitur Favorit</h2>
-                            <div className="space-y-3">
-                                {Object.entries(analytics.popular_features || {}).length > 0 ? (
-                                    Object.entries(analytics.popular_features)
-                                        .sort(([,a], [,b]) => b - a)
-                                        .map(([feature, count]) => (
-                                            <div key={feature} className="flex items-center justify-between">
-                                                <span className="font-semibold text-ink capitalize">{feature}</span>
-                                                <span className="bg-tealSoft text-teal-800 px-3 py-1 rounded-full text-sm">
-                                                    {count}x digunakan
-                                                </span>
-                                            </div>
+                        <Panel title="Fitur tambahan favorit" copy="Tambahan yang paling sering muncul di estimasi Anda.">
+                            {featureEntries.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                    {featureEntries.map(([feature, count]) => (
+                                        <span key={feature} className="rounded-sm bg-tealSoft px-3 py-2 text-sm font-semibold capitalize text-primary">
+                                            {feature} ({count}x)
+                                        </span>
+                                    ))}
+                                </div>
+                            ) : (
+                                <EmptyText>Belum ada fitur tambahan yang sering dipilih.</EmptyText>
+                            )}
+                        </Panel>
+                    </section>
+
+                    <section className="mt-8 grid gap-6 lg:grid-cols-3">
+                        <RecommendationList title="Rekomendasi upgrade" items={recommendations.suggested_upgrades} empty="Belum ada rekomendasi upgrade." />
+                        <RecommendationList title="Optimasi biaya" items={recommendations.cost_optimization} empty="Optimasi akan muncul setelah data cukup." />
+                        <RecommendationList title="Fitur yang bisa ditambahkan" items={recommendations.feature_recommendations} empty="Belum ada rekomendasi fitur." />
+                    </section>
+
+                    <section className="mt-8 panel-strong p-6">
+                        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                            <div>
+                                <p className="metric-label">Langkah berikutnya</p>
+                                <div className="mt-3 space-y-2">
+                                    {(recommendations.next_steps || []).length > 0 ? (
+                                        recommendations.next_steps.map((step, index) => (
+                                            <p key={`${step.message}-${index}`} className="text-sm text-ash">
+                                                {index + 1}. {step.message}
+                                            </p>
                                         ))
-                                ) : (
-                                    <p className="text-ash">Belum ada fitur tambahan</p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Recommendations */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        {/* Upgrade Suggestions */}
-                        <div className="bg-white rounded-lg shadow p-6">
-                            <h2 className="text-xl font-bold text-ink mb-4">🚀 Rekomendasi Upgrade</h2>
-                            {recommendations.suggested_upgrades?.length > 0 ? (
-                                <div className="space-y-4">
-                                    {recommendations.suggested_upgrades.map((rec, idx) => (
-                                        <div key={idx} className="border border-tealSoft rounded-lg p-4">
-                                            <h3 className="font-bold text-ink mb-2">{rec.title}</h3>
-                                            <p className="text-sm text-ash mb-3">{rec.description}</p>
-                                            {rec.benefit && (
-                                                <p className="text-xs bg-teal-100 text-teal-800 p-2 rounded">
-                                                    ✓ {rec.benefit}
-                                                </p>
-                                            )}
-                                        </div>
-                                    ))}
+                                    ) : (
+                                        <p className="text-sm text-ash">Buat estimasi baru atau lanjutkan request quote untuk validasi biaya.</p>
+                                    )}
                                 </div>
-                            ) : (
-                                <p className="text-ash">Tidak ada rekomendasi upgrade saat ini</p>
-                            )}
-                        </div>
-
-                        {/* Cost Optimization */}
-                        <div className="bg-white rounded-lg shadow p-6">
-                            <h2 className="text-xl font-bold text-ink mb-4">💰 Optimasi Biaya</h2>
-                            {recommendations.cost_optimization?.length > 0 ? (
-                                <div className="space-y-4">
-                                    {recommendations.cost_optimization.map((rec, idx) => (
-                                        <div key={idx} className="border border-amber-300 rounded-lg p-4">
-                                            <h3 className="font-bold text-ink mb-2">{rec.title}</h3>
-                                            <p className="text-sm text-ash mb-3">{rec.description}</p>
-                                            {rec.savings && (
-                                                <p className="text-xs bg-amber-100 text-amber-800 p-2 rounded">
-                                                    💡 Hemat hingga {rec.savings}
-                                                </p>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-ash">Optimasi akan tersedia setelah lebih banyak estimasi</p>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Feature Recommendations */}
-                    <div className="bg-white rounded-lg shadow p-6 mb-8">
-                        <h2 className="text-xl font-bold text-ink mb-4">💡 Fitur Yang Bisa Ditambahkan</h2>
-                        {recommendations.feature_recommendations?.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {recommendations.feature_recommendations.map((feature, idx) => (
-                                    <div key={idx} className="border border-softCloud rounded-lg p-4 hover:shadow-lg transition-shadow">
-                                        <h3 className="font-bold text-ink mb-2">{feature.title}</h3>
-                                        <p className="text-sm text-ash">{feature.description}</p>
-                                    </div>
-                                ))}
                             </div>
-                        ) : (
-                            <p className="text-ash">Fitur rekomendasi akan muncul setelah estimasi</p>
-                        )}
-                    </div>
-
-                    {/* Next Steps */}
-                    <div className="bg-gradient-to-r from-teal-50 to-blue-50 rounded-lg shadow p-6">
-                        <h2 className="text-xl font-bold text-ink mb-4">📝 Langkah Selanjutnya</h2>
-                        {recommendations.next_steps?.length > 0 ? (
-                            <div className="space-y-3">
-                                {recommendations.next_steps.map((step, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <div className="w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold">
-                                            {idx + 1}
-                                        </div>
-                                        <div>
-                                            <p className="text-ink font-semibold">{step.message}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-ash">Tidak ada langkah selanjutnya</p>
-                        )}
-                    </div>
-
-                    {/* Call to Action */}
-                    <div className="mt-8 text-center p-6 bg-white rounded-lg shadow">
-                        <p className="text-mute mb-4">Siap untuk konsultasi lebih lanjut?</p>
-                        <Link
-                            href={route('house.quotation')}
-                            className="btn-primary inline-block px-8 py-3 text-lg font-semibold"
-                        >
-                            💌 Hubungi Kontraktor
-                        </Link>
-                    </div>
+                            <Link href={route('house.quotation')} className="btn-primary">
+                                Minta Penawaran
+                            </Link>
+                        </div>
+                    </section>
                 </div>
             </div>
         </>
     );
+}
+
+function MetricCard({ label, value, copy, icon: Icon, capitalize = false }) {
+    return (
+        <article className="panel-strong p-5">
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <p className="metric-label">{label}</p>
+                    <p className={`metric-value ${capitalize ? 'capitalize' : ''}`}>{value}</p>
+                    <p className="mt-2 text-sm text-ash">{copy}</p>
+                </div>
+                <Icon className="h-5 w-5 text-primary" />
+            </div>
+        </article>
+    );
+}
+
+function Panel({ title, copy, children }) {
+    return (
+        <section className="panel-strong p-6">
+            <h2 className="text-heading-md font-semibold text-ink">{title}</h2>
+            <p className="mt-2 text-sm text-ash">{copy}</p>
+            <div className="mt-5">{children}</div>
+        </section>
+    );
+}
+
+function RecommendationList({ title, items = [], empty }) {
+    return (
+        <Panel title={title} copy="Saran ini membantu menentukan prioritas sebelum konsultasi.">
+            {items.length > 0 ? (
+                <div className="space-y-3">
+                    {items.map((item, index) => (
+                        <article key={`${item.title}-${index}`} className="rounded-md border border-hairlineSoft bg-softCloud p-4">
+                            <div className="flex items-start gap-3">
+                                <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                <div>
+                                    <p className="text-sm font-semibold text-ink">{item.title}</p>
+                                    <p className="mt-1 text-sm text-ash">{item.description}</p>
+                                    {(item.benefit || item.savings) && (
+                                        <p className="mt-2 text-xs font-semibold text-primary">{item.benefit || `Potensi hemat ${item.savings}`}</p>
+                                    )}
+                                </div>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            ) : (
+                <EmptyText>{empty}</EmptyText>
+            )}
+        </Panel>
+    );
+}
+
+function EmptyText({ children }) {
+    return <p className="text-sm text-ash">{children}</p>;
 }

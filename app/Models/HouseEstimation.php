@@ -19,6 +19,7 @@ class HouseEstimation extends Model
         'location',
         'notes',
         'additional_features',
+        'material_choices',
         'total_estimate',
         'breakdown',
         'summary',
@@ -27,6 +28,7 @@ class HouseEstimation extends Model
 
     protected $casts = [
         'additional_features' => 'array',
+        'material_choices' => 'array',
         'breakdown' => 'array',
         'floor_area' => 'decimal:2',
         'land_area' => 'decimal:2',
