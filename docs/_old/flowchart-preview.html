@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Flowchart RABKita</title>
+<script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({ startOnLoad: true, theme: "neutral", flowchart: { curve: "basis", useMaxWidth: true } });
+</script>
+<style>
+  body { color: var(--foreground); }
+  h2 { font-size: 15px; margin: 18px 0 8px; }
+  h2:first-child { margin-top: 0; }
+  .mermaid { overflow-x: auto; }
+</style>
+</head>
+<body>
+<h2>1. Alur utama aplikasi</h2>
+<pre class="mermaid">
+flowchart TD
+    A[Landing page /] --> B{Sudah punya akun?}
+    B -->|Belum| C[Register /register]
+    B -->|Sudah| D[Login /login]
+    C -->|Validasi OK| D
+    D -->|OK| E[Dashboard /dashboard]
+    E --> F[Proyek &amp; item RAB]
+    E --> G[Master material]
+    E --> H[Profil &amp; pengaturan perusahaan]
+    E --> I[Estimasi rumah cepat]
+    F --> J[Detail proyek]
+    J --> K[Susun item RAB]
+    J --> L[Simpan revisi]
+    J --> M[Change order]
+    J --> N[Rekomendasi AI]
+    J --> O[Export PDF]
+    K --> P[Ringkasan RAB server-side]
+    P --> J
+    N -->|diterima| K
+    O --> Q[PDF siap kirim ke klien]
+</pre>
+
+<h2>2. Perhitungan ringkasan RAB</h2>
+<pre class="mermaid">
+flowchart LR
+    A[Σ volume x unitPrice] --> B[subtotal]
+    B --> C[− diskon = dasar]
+    C --> D[+ pajak 11%]
+    C --> E[+ biaya jasa]
+    C --> F[+ margin 15%]
+    D --> G[grandTotal]
+    E --> G
+    F --> G
+</pre>
+
+<h2>3. Rekomendasi AI</h2>
+<pre class="mermaid">
+flowchart LR
+    A[prompt] --> B[pending]
+    B --> C{Gemini API}
+    C -->|sukses| D[completed → pilih saran]
+    C -->|gagal| E[failed → isi manual]
+    D --> F[item RAB baru]
+</pre>
+</body>
+</html>

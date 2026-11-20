@@ -1,0 +1,471 @@
+{
+ "categories": [
+  {
+   "id": 1,
+   "code": "DIV-01",
+   "name": "Pekerjaan Tanah & Pasir",
+   "sortOrder": 1,
+   "description": null
+  },
+  {
+   "id": 2,
+   "code": "DIV-02",
+   "name": "Pekerjaan Pondasi",
+   "sortOrder": 2,
+   "description": null
+  },
+  {
+   "id": 3,
+   "code": "DIV-03",
+   "name": "Pekerjaan Struktur Beton",
+   "sortOrder": 3,
+   "description": null
+  },
+  {
+   "id": 4,
+   "code": "DIV-04",
+   "name": "Pekerjaan Dinding & Plesteran",
+   "sortOrder": 4,
+   "description": null
+  }
+ ],
+ "resources": [
+  {
+   "id": 1,
+   "code": "L.01",
+   "name": "Pekerja Konstruksi",
+   "type": "labor",
+   "unit": "OH",
+   "unitPrice": 120000,
+   "source": "Standar Biaya Umum / Permen PUPR",
+   "effectiveDate": "2026-01-01",
+   "description": "Pekerja harian standar konstruksi 8 jam kerja",
+   "isActive": true
+  },
+  {
+   "id": 2,
+   "code": "L.02",
+   "name": "Tukang Batu",
+   "type": "labor",
+   "unit": "OH",
+   "unitPrice": 140000,
+   "source": "Standar Biaya Umum / Permen PUPR",
+   "effectiveDate": "2026-01-01",
+   "description": "Tukang ahli pasangan pondasi, bata, dan plesteran",
+   "isActive": true
+  },
+  {
+   "id": 3,
+   "code": "L.03",
+   "name": "Tukang Besi",
+   "type": "labor",
+   "unit": "OH",
+   "unitPrice": 145000,
+   "source": "Standar Biaya Umum / Permen PUPR",
+   "effectiveDate": "2026-01-01",
+   "description": "Tukang pembesian dan perakitan tulangan beton",
+   "isActive": true
+  },
+  {
+   "id": 4,
+   "code": "L.04",
+   "name": "Tukang Kayu",
+   "type": "labor",
+   "unit": "OH",
+   "unitPrice": 145000,
+   "source": "Standar Biaya Umum / Permen PUPR",
+   "effectiveDate": "2026-01-01",
+   "description": "Tukang perancah dan bekisting cetakan beton",
+   "isActive": true
+  },
+  {
+   "id": 5,
+   "code": "L.05",
+   "name": "Kepala Tukang",
+   "type": "labor",
+   "unit": "OH",
+   "unitPrice": 160000,
+   "source": "Standar Biaya Umum / Permen PUPR",
+   "effectiveDate": "2026-01-01",
+   "description": "Kepala regu kerja lapangan",
+   "isActive": true
+  },
+  {
+   "id": 6,
+   "code": "L.06",
+   "name": "Mandor Lapangan",
+   "type": "labor",
+   "unit": "OH",
+   "unitPrice": 175000,
+   "source": "Standar Biaya Umum / Permen PUPR",
+   "effectiveDate": "2026-01-01",
+   "description": "Pengawas pelaksana regu kerja",
+   "isActive": true
+  },
+  {
+   "id": 7,
+   "code": "M.01",
+   "name": "Semen Portland (PC) 50kg",
+   "type": "material",
+   "unit": "kg",
+   "unitPrice": 1500,
+   "source": "Survei Toko Bahan Bangunan",
+   "effectiveDate": "2026-01-01",
+   "description": "Semen tipe I standar SNI (setara Rp 75.000 / zak 50kg)",
+   "isActive": true
+  },
+  {
+   "id": 8,
+   "code": "M.02",
+   "name": "Pasir Pasang",
+   "type": "material",
+   "unit": "m3",
+   "unitPrice": 280000,
+   "source": "Survei Pemasok Agregat",
+   "effectiveDate": "2026-01-01",
+   "description": "Pasir kali ayak untuk adukan spesi pasang bata dan plesteran",
+   "isActive": true
+  },
+  {
+   "id": 9,
+   "code": "M.03",
+   "name": "Pasir Beton",
+   "type": "material",
+   "unit": "m3",
+   "unitPrice": 310000,
+   "source": "Survei Pemasok Agregat",
+   "effectiveDate": "2026-01-01",
+   "description": "Pasir silika/kasar untuk campuran struktur beton",
+   "isActive": true
+  },
+  {
+   "id": 10,
+   "code": "M.04",
+   "name": "Kerikil / Split Beton (Pecah 2/3 cm)",
+   "type": "material",
+   "unit": "m3",
+   "unitPrice": 330000,
+   "source": "Survei Pemasok Agregat",
+   "effectiveDate": "2026-01-01",
+   "description": "Agregat kasar batu pecah mesin ukuran 20-30 mm",
+   "isActive": true
+  },
+  {
+   "id": 11,
+   "code": "M.05",
+   "name": "Air Kerja Konstruksi",
+   "type": "material",
+   "unit": "liter",
+   "unitPrice": 150,
+   "source": "Standar PUPR",
+   "effectiveDate": "2026-01-01",
+   "description": "Air tawar bersih untuk adukan spesi dan beton",
+   "isActive": true
+  },
+  {
+   "id": 12,
+   "code": "M.06",
+   "name": "Bata Merah Bakar Standar",
+   "type": "material",
+   "unit": "buah",
+   "unitPrice": 1100,
+   "source": "Survei Produsen Lokal",
+   "effectiveDate": "2026-01-01",
+   "description": "Bata merah kelas I ukuran 5 x 11 x 22 cm",
+   "isActive": true
+  },
+  {
+   "id": 13,
+   "code": "M.07",
+   "name": "Batu Belah / Batu Kali 15/20 cm",
+   "type": "material",
+   "unit": "m3",
+   "unitPrice": 290000,
+   "source": "Survei Pemasok Lokal",
+   "effectiveDate": "2026-01-01",
+   "description": "Batu keras tanpa lumpur untuk pondasi lajur",
+   "isActive": true
+  },
+  {
+   "id": 14,
+   "code": "M.08",
+   "name": "Besi Beton Polos / Ulir BJTS 420B",
+   "type": "material",
+   "unit": "kg",
+   "unitPrice": 14500,
+   "source": "Distributor Baja Tulangan",
+   "effectiveDate": "2026-01-01",
+   "description": "Besi beton SNI bersertifikat",
+   "isActive": true
+  },
+  {
+   "id": 15,
+   "code": "M.09",
+   "name": "Kawat Beton / Bendrat",
+   "type": "material",
+   "unit": "kg",
+   "unitPrice": 24000,
+   "source": "Distributor Besi",
+   "effectiveDate": "2026-01-01",
+   "description": "Kawat ikat tulangan diameter 1 mm",
+   "isActive": true
+  },
+  {
+   "id": 16,
+   "code": "M.10",
+   "name": "Kayu Bekisting (Terentang / MC)",
+   "type": "material",
+   "unit": "m3",
+   "unitPrice": 2600000,
+   "source": "Pangkalan Kayu",
+   "effectiveDate": "2026-01-01",
+   "description": "Kayu kelas III untuk acuan bekisting beton",
+   "isActive": true
+  },
+  {
+   "id": 17,
+   "code": "M.11",
+   "name": "Paku Usuk 5 cm - 10 cm",
+   "type": "material",
+   "unit": "kg",
+   "unitPrice": 22000,
+   "source": "Toko Bahan Bangunan",
+   "effectiveDate": "2026-01-01",
+   "description": "Paku kayu konstruksi",
+   "isActive": true
+  },
+  {
+   "id": 18,
+   "code": "E.01",
+   "name": "Sewa Concrete Mixer 0.35 m3 (Molen)",
+   "type": "equipment",
+   "unit": "hari",
+   "unitPrice": 250000,
+   "source": "Rental Alat Konstruksi",
+   "effectiveDate": "2026-01-01",
+   "description": "Mesin molen aduk beton bensin 8 PK",
+   "isActive": true
+  },
+  {
+   "id": 19,
+   "code": "E.02",
+   "name": "Sewa Concrete Vibrator",
+   "type": "equipment",
+   "unit": "hari",
+   "unitPrice": 150000,
+   "source": "Rental Alat Konstruksi",
+   "effectiveDate": "2026-01-01",
+   "description": "Mesin penggetar beton pemadat",
+   "isActive": true
+  }
+ ],
+ "workItems": [
+  {
+   "id": 1,
+   "categoryId": 1,
+   "code": "A.2.3.1.1",
+   "name": "Penggalian 1 m3 Tanah Biasa Sedalam 1 meter",
+   "unit": "m3",
+   "description": "Penggalian tanah pondasi manual standar SNI",
+   "overheadPercent": 10,
+   "isActive": true
+  },
+  {
+   "id": 2,
+   "categoryId": 2,
+   "code": "A.3.2.1.2",
+   "name": "Pemasangan 1 m3 Pondasi Batu Belah Campuran 1 SP : 4 PP",
+   "unit": "m3",
+   "description": "Pondasi lajur batu kali adukan 1 semen : 4 pasir pasang",
+   "overheadPercent": 10,
+   "isActive": true
+  },
+  {
+   "id": 3,
+   "categoryId": 3,
+   "code": "A.4.1.1.5",
+   "name": "Membuat 1 m3 Beton Mutu f'c = 19,3 MPa (K 225), slump (12 ± 2) cm",
+   "unit": "m3",
+   "description": "Beton struktur SNI K-225 menggunakan pengaduk mekanis (molen)",
+   "overheadPercent": 10,
+   "isActive": true
+  },
+  {
+   "id": 4,
+   "categoryId": 4,
+   "code": "A.4.4.1.9",
+   "name": "Pemasangan 1 m2 Dinding Bata Merah Tebal 1/2 Bata Campuran 1 SP : 4 PP",
+   "unit": "m2",
+   "description": "Pasangan bata merah adukan 1 semen : 4 pasir pasang",
+   "overheadPercent": 10,
+   "isActive": true
+  },
+  {
+   "id": 5,
+   "categoryId": 4,
+   "code": "A.4.4.2.4",
+   "name": "Pemasangan 1 m2 Plesteran 1 SP : 4 PP Tebal 15 mm",
+   "unit": "m2",
+   "description": "Plesteran dinding bata tebal 15 mm adukan 1 : 4",
+   "overheadPercent": 10,
+   "isActive": true
+  }
+ ],
+ "components": [
+  {
+   "workItemId": 1,
+   "resourceId": 1,
+   "coefficient": 0.75
+  },
+  {
+   "workItemId": 1,
+   "resourceId": 6,
+   "coefficient": 0.025
+  },
+  {
+   "workItemId": 2,
+   "resourceId": 13,
+   "coefficient": 1.2
+  },
+  {
+   "workItemId": 2,
+   "resourceId": 7,
+   "coefficient": 163
+  },
+  {
+   "workItemId": 2,
+   "resourceId": 8,
+   "coefficient": 0.52
+  },
+  {
+   "workItemId": 2,
+   "resourceId": 1,
+   "coefficient": 1.5
+  },
+  {
+   "workItemId": 2,
+   "resourceId": 2,
+   "coefficient": 0.75
+  },
+  {
+   "workItemId": 2,
+   "resourceId": 5,
+   "coefficient": 0.075
+  },
+  {
+   "workItemId": 2,
+   "resourceId": 6,
+   "coefficient": 0.075
+  },
+  {
+   "workItemId": 3,
+   "resourceId": 7,
+   "coefficient": 371
+  },
+  {
+   "workItemId": 3,
+   "resourceId": 9,
+   "coefficient": 0.498
+  },
+  {
+   "workItemId": 3,
+   "resourceId": 10,
+   "coefficient": 0.776
+  },
+  {
+   "workItemId": 3,
+   "resourceId": 11,
+   "coefficient": 215
+  },
+  {
+   "workItemId": 3,
+   "resourceId": 1,
+   "coefficient": 1.65
+  },
+  {
+   "workItemId": 3,
+   "resourceId": 2,
+   "coefficient": 0.275
+  },
+  {
+   "workItemId": 3,
+   "resourceId": 5,
+   "coefficient": 0.028
+  },
+  {
+   "workItemId": 3,
+   "resourceId": 6,
+   "coefficient": 0.083
+  },
+  {
+   "workItemId": 3,
+   "resourceId": 18,
+   "coefficient": 0.05
+  },
+  {
+   "workItemId": 4,
+   "resourceId": 12,
+   "coefficient": 70
+  },
+  {
+   "workItemId": 4,
+   "resourceId": 7,
+   "coefficient": 11.5
+  },
+  {
+   "workItemId": 4,
+   "resourceId": 8,
+   "coefficient": 0.043
+  },
+  {
+   "workItemId": 4,
+   "resourceId": 1,
+   "coefficient": 0.3
+  },
+  {
+   "workItemId": 4,
+   "resourceId": 2,
+   "coefficient": 0.1
+  },
+  {
+   "workItemId": 4,
+   "resourceId": 5,
+   "coefficient": 0.01
+  },
+  {
+   "workItemId": 4,
+   "resourceId": 6,
+   "coefficient": 0.015
+  },
+  {
+   "workItemId": 5,
+   "resourceId": 7,
+   "coefficient": 6.24
+  },
+  {
+   "workItemId": 5,
+   "resourceId": 8,
+   "coefficient": 0.024
+  },
+  {
+   "workItemId": 5,
+   "resourceId": 1,
+   "coefficient": 0.3
+  },
+  {
+   "workItemId": 5,
+   "resourceId": 2,
+   "coefficient": 0.15
+  },
+  {
+   "workItemId": 5,
+   "resourceId": 5,
+   "coefficient": 0.015
+  },
+  {
+   "workItemId": 5,
+   "resourceId": 6,
+   "coefficient": 0.015
+  }
+ ]
+}

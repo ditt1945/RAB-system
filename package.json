@@ -6,21 +6,34 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
-    "next": "16.4.4",
+    "@google/generative-ai": "^0.24.1",
+    "@prisma/adapter-mariadb": "^7.10.1",
+    "@prisma/client": "^7.10.1",
+    "bcryptjs": "^3.0.3",
+    "decimal.js": "^10.6.0",
+    "lucide-react": "^1.67.0",
+    "mariadb": "^3.5.4",
+    "next": "^16.4.6",
+    "next-auth": "^4.24.15",
+    "pdfkit": "^0.20.2",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.4.4",
+    "eslint-config-next": "^16.4.6",
+    "prisma": "^7.10.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+    "vitest": "^4.1.12"
+  },
+  "type": "module"
 }
