@@ -35,6 +35,7 @@ export default function RegisterForm() {
       router.push('/login');
       return;
     }
+    // loading dibiarkan true sampai pindah halaman, supaya tidak terkirim dua kali
     router.push('/dashboard');
     router.refresh();
   };
@@ -48,7 +49,7 @@ export default function RegisterForm() {
       <Field label="Email" required error={errors.email}>
         <input type="email" className={inputClass} value={form.email} onChange={set('email')} autoComplete="email" />
       </Field>
-      <Field label="Password" required error={errors.password} hint="Minimal 8 karakter">
+      <Field label="Kata sandi" required error={errors.password} hint="Minimal 8 karakter">
         <input type="password" className={inputClass} value={form.password} onChange={set('password')} autoComplete="new-password" />
       </Field>
       <button type="submit" disabled={loading} className={`${buttonClass.primary} w-full`}>

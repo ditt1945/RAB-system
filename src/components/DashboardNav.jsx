@@ -14,14 +14,14 @@ const LINKS = [
   { href: '/profile', label: 'Akun', icon: Settings },
 ];
 
-export default function DashboardNav({ user }) {
+export default function DashboardNav({ user, wide = false }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const isActive = (href) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/90 backdrop-blur print:hidden">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className={`mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 ${wide ? 'max-w-[90rem]' : 'max-w-7xl'}`}>
         <div className="flex items-center gap-8">
           <Link href="/dashboard" className="flex items-center gap-2.5">
             <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#e2673d] text-xs font-black text-white">RK</span>

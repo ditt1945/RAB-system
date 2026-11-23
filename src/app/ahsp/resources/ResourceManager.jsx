@@ -16,14 +16,24 @@ export default function ResourceManager({ resources, canEdit }) {
   const [editing, setEditing] = useState(null); // { id | 'new', ...fields }
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const working = busy || pending;
+
+  const cancel = () => {
+    setEditing(null);
+    setError(null);
+  };
 
   const startEdit = (r) => setEditing({ ...EMPTY, ...r, effectiveDate: r.effectiveDate?.slice(0, 10) ?? '', source: r.source ?? '' });
   const field = (key) => (e) => setEditing((v) => ({ ...v, [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
 
   const save = async () => {
+    if (working) return;
     const isNew = editing.id === 'new';
     const { id, _count, createdAt, updatedAt, ...body } = editing;
+    setBusy(true);
     const res = await api(isNew ? '/api/resources' : `/api/resources/${id}`, { method: isNew ? 'POST' : 'PUT', body });
+    setBusy(false);
     if (!res.ok) return setError(Object.values(res.fields)[0]?.[0] ?? res.error);
     setEditing(null);
     setError(null);
@@ -32,8 +42,10 @@ export default function ResourceManager({ resources, canEdit }) {
   };
 
   const remove = async (r) => {
-    if (!window.confirm(`Hapus "${r.name}"?`)) return;
+    if (working || !window.confirm(`Hapus "${r.name}"?`)) return;
+    setBusy(true);
     const res = await api(`/api/resources/${r.id}`, { method: 'DELETE' });
+    setBusy(false);
     if (!res.ok) return setError(res.error);
     setError(null);
     setMessage(res.data.message);
@@ -70,10 +82,10 @@ export default function ResourceManager({ resources, canEdit }) {
       </td>
       <td className="px-3 py-2">
         <div className="flex justify-end gap-1">
-          <button type="button" onClick={save} disabled={pending} className={buttonClass.ghost} title="Simpan">
+          <button type="button" onClick={save} disabled={working} className={buttonClass.ghost} title="Simpan" aria-label="Simpan">
             <Check className="h-4 w-4 text-emerald-400" />
           </button>
-          <button type="button" onClick={() => setEditing(null)} className={buttonClass.ghost} title="Batal">
+          <button type="button" onClick={cancel} className={buttonClass.ghost} title="Batal" aria-label="Batal">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -138,10 +150,10 @@ export default function ResourceManager({ resources, canEdit }) {
                           <td className="px-3 py-2">
                             {canEdit && (
                               <div className="flex justify-end gap-1">
-                                <button type="button" onClick={() => startEdit(r)} className={buttonClass.ghost} title="Edit">
+                                <button type="button" onClick={() => { setError(null); startEdit(r); }} disabled={working} className={buttonClass.ghost} title="Edit" aria-label={`Edit ${r.name}`}>
                                   <Pencil className="h-3.5 w-3.5" />
                                 </button>
-                                <button type="button" onClick={() => remove(r)} className={buttonClass.ghost} title="Hapus">
+                                <button type="button" onClick={() => remove(r)} disabled={working} className={buttonClass.ghost} title="Hapus" aria-label={`Hapus ${r.name}`}>
                                   <Trash2 className="h-3.5 w-3.5 text-red-400" />
                                 </button>
                               </div>

@@ -31,7 +31,8 @@ export function validationFailed(zodError) {
 
 /** "12" → 12n; ID tidak valid → null (supaya dibalas 404, bukan 500). */
 export function parseId(value) {
-  return /^\d{1,19}$/.test(String(value ?? '')) ? BigInt(value) : null;
+  // Dibatasi 18 digit: BigInt MySQL maksimal 9.223.372.036.854.775.807
+  return /^\d{1,18}$/.test(String(value ?? '')) ? BigInt(value) : null;
 }
 
 export async function readJson(req) {
@@ -51,10 +52,32 @@ export function withUser(handler, { admin = false } = {}) {
       const params = ctx?.params ? await ctx.params : {};
       return await handler(req, { params }, user);
     } catch (error) {
-      if (error?.code === 'P2002') return fail('Kode sudah dipakai, gunakan kode lain', 409, { fields: { code: ['Kode sudah dipakai'] } });
-      if (error?.code === 'P2003') return fail('Data masih dipakai oleh data lain sehingga tidak bisa dihapus', 409);
+      const known = prismaErrorResponse(error);
+      if (known) return known;
       console.error(`[API ${req.method} ${new URL(req.url).pathname}]`, error);
       return fail('Terjadi kesalahan pada server', 500);
     }
   };
+}
+
+/**
+ * Terjemahkan error Prisma yang bisa diduga menjadi balasan yang jelas, atau null.
+ * P2002 = data unik bentrok, P2003 = relasi tidak cocok, P2000/P2020 = nilai melebihi ukuran kolom.
+ */
+export function prismaErrorResponse(error) {
+  switch (error?.code) {
+    case 'P2002': {
+      const target = JSON.stringify(error.meta ?? {});
+      if (target.includes('email')) return fail('Email sudah dipakai akun lain', 409, { fields: { email: ['Email sudah dipakai akun lain'] } });
+      return fail('Kode sudah dipakai, gunakan kode lain', 409, { fields: { code: ['Kode sudah dipakai'] } });
+    }
+    case 'P2003':
+      return fail('Data terkait tidak ditemukan, atau data ini masih dipakai data lain', 409);
+    case 'P2000':
+      return fail('Isian terlalu panjang', 422);
+    case 'P2020':
+      return fail('Angka terlalu besar', 422);
+    default:
+      return null;
+  }
 }

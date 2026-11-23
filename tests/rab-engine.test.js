@@ -3,9 +3,12 @@ import {
   calculateAhspPrice,
   calculateRabItemSubtotal,
   calculateProjectSummary,
+  calculateMaterialNeeds,
   groupRabItems,
+  LIMITS,
 } from '../src/lib/calculations/rab.js';
 import { terbilang } from '../src/lib/format.js';
+import { projectSchema, rabItemSchema } from '../src/lib/validation/schemas.js';
 
 const galian = {
   overheadPercent: '10',
@@ -85,9 +88,9 @@ describe('Rekapitulasi RAB', () => {
 describe('Pengelompokan item', () => {
   it('mengelompokkan per groupName dengan subtotal', () => {
     const groups = groupRabItems([
-      { groupName: 'Tanah', subtotal: 100 },
-      { groupName: 'Pondasi', subtotal: 50 },
-      { groupName: 'Tanah', subtotal: 25 },
+      { groupName: 'Tanah', volume: 1, unitPrice: 100 },
+      { groupName: 'Pondasi', volume: 2, unitPrice: 25 },
+      { groupName: 'Tanah', volume: 0.5, unitPrice: 50 },
     ]);
     expect(groups.map((g) => [g.name, g.subtotal, g.items.length])).toEqual([
       ['Tanah', 125, 2],
@@ -95,16 +98,67 @@ describe('Pengelompokan item', () => {
     ]);
   });
 
+  it('jumlah semua kelompok selalu sama dengan jumlah harga pekerjaan di rekap', () => {
+    // Volume 4 desimal: database menyimpan 3 desimal, jadi keduanya harus memakai 1,000
+    const items = [
+      { groupName: 'A', volume: 1.0004, unitPrice: 1_000_000 },
+      { groupName: 'B', volume: 2.3456, unitPrice: 333_333.333 },
+    ];
+    const groupsTotal = groupRabItems(items).reduce((sum, g) => sum + g.subtotal, 0);
+    const summary = calculateProjectSummary({ items, rabTaxPercent: 11 });
+    expect(groupsTotal).toBe(summary.itemsSubtotal);
+    expect(calculateRabItemSubtotal(1.0004, 1_000_000)).toBe(1_000_000);
+  });
+
   it('mengurutkan kelompok sesuai urutan kategori, kelompok lain di akhir', () => {
     const groups = groupRabItems(
       [
-        { groupName: 'Lain-lain', subtotal: 1 },
-        { groupName: 'Pondasi', subtotal: 1 },
-        { groupName: 'Persiapan', subtotal: 1 },
+        { groupName: 'Lain-lain', volume: 1, unitPrice: 1 },
+        { groupName: 'Pondasi', volume: 1, unitPrice: 1 },
+        { groupName: 'Persiapan', volume: 1, unitPrice: 1 },
       ],
       ['Persiapan', 'Tanah', 'Pondasi'],
     );
     expect(groups.map((g) => g.name)).toEqual(['Persiapan', 'Pondasi', 'Lain-lain']);
+  });
+});
+
+describe('Kebutuhan material', () => {
+  const semen = { id: 1, code: 'M.01', name: 'Semen portland', unit: 'kg', type: 'bahan', unitPrice: 1500 };
+  const pasir = { id: 2, code: 'M.02', name: 'Pasir pasang', unit: 'm3', type: 'bahan', unitPrice: 250000 };
+  const pekerja = { id: 3, code: 'L.01', name: 'Pekerja', unit: 'OH', type: 'upah', unitPrice: 120000 };
+
+  it('koefisien bahan × volume, dijumlahkan per bahan, upah tidak dihitung', () => {
+    const result = calculateMaterialNeeds([
+      { volume: 10, components: [{ coefficient: 9.68, resource: semen }, { coefficient: 0.045, resource: pasir }, { coefficient: 0.3, resource: pekerja }] },
+      { volume: 2, components: [{ coefficient: 5, resource: semen }] },
+    ]);
+    expect(result.items.map((m) => [m.code, m.quantity, m.amount])).toEqual([
+      ['M.01', 106.8, 160_200],
+      ['M.02', 0.45, 112_500],
+    ]);
+    expect(result.total).toBe(272_700);
+  });
+
+  it('tanpa pekerjaan AHSP, daftar material kosong', () => {
+    expect(calculateMaterialNeeds([])).toEqual({ items: [], total: 0 });
+  });
+});
+
+describe('Validasi input', () => {
+  it('volume dibulatkan 3 desimal dan harga 2 desimal', () => {
+    const parsed = rabItemSchema.parse({ name: 'Mobilisasi', unit: 'ls', volume: '1.23456', unitPrice: '1000.555' });
+    expect([parsed.volume, parsed.unitPrice]).toEqual([1.235, 1000.56]);
+  });
+
+  it('angka yang tidak muat di database ditolak (bukan error 500)', () => {
+    expect(rabItemSchema.safeParse({ name: 'X item', unit: 'ls', volume: 1, unitPrice: LIMITS.price + 1 }).success).toBe(false);
+    expect(rabItemSchema.safeParse({ name: 'X item', unit: 'ls', volume: LIMITS.volume + 1, unitPrice: 1 }).success).toBe(false);
+    expect(rabItemSchema.safeParse({ ahspId: '1'.repeat(19), volume: 1 }).success).toBe(false);
+  });
+
+  it('tahun di luar 1900–2100 ditolak', () => {
+    expect(projectSchema.safeParse({ projectName: 'Rumah', clientName: 'Budi', startDate: '12000-01-01' }).success).toBe(false);
   });
 });
 

@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { fail, ok, parseId, readJson, validationFailed, withUser } from '@/lib/api';
 import { findAhspWithPrice } from '@/lib/rab-data';
+import { checkAhspReferences } from '@/lib/ahsp';
 import { ahspSchema } from '@/lib/validation/schemas';
 
 const NOT_FOUND = 'AHSP tidak ditemukan';
@@ -20,6 +21,8 @@ export const PUT = withUser(
     const parsed = ahspSchema.safeParse(await readJson(req));
     if (!parsed.success) return validationFailed(parsed.error);
     const { components, categoryId, ...rest } = parsed.data;
+    const badReference = await checkAhspReferences(parsed.data);
+    if (badReference) return badReference;
 
     // Ganti seluruh komponen dalam satu transaksi
     const data = await prisma.$transaction(async (tx) => {

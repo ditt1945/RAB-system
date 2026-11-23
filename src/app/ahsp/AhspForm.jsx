@@ -54,18 +54,28 @@ export default function AhspForm({ categories, resources, ahsp }) {
       method: isEdit ? 'PUT' : 'POST',
       body: { ...form, components: components.filter((c) => c.resourceId) },
     });
-    setSaving(false);
     if (!res.ok) {
+      setSaving(false);
       setError(res.fields.components?.[0] ?? res.error);
       setErrors(res.fields);
       return;
     }
+    // saving dibiarkan true sampai pindah halaman, supaya tombol tidak bisa diklik dua kali
     router.push(`/ahsp/${isEdit ? ahsp.id : res.data.data.id}`);
     router.refresh();
   };
 
   return (
     <form onSubmit={submit} className="space-y-6" noValidate>
+      {categories.length === 0 && (
+        <Alert type="warning">
+          Belum ada kategori pekerjaan.{' '}
+          <Link href="/ahsp/categories" className="font-semibold underline">
+            Buat kategori dulu
+          </Link>{' '}
+          sebelum menambah AHSP.
+        </Alert>
+      )}
       <Alert>{error}</Alert>
 
       <Card title="Data pekerjaan">
@@ -138,6 +148,7 @@ export default function AhspForm({ categories, resources, ahsp }) {
                   onClick={() => setComponents((list) => list.filter((_, i) => i !== index))}
                   className={buttonClass.ghost}
                   title="Hapus komponen"
+                  aria-label="Hapus komponen"
                   disabled={components.length === 1}
                 >
                   <Trash2 className="h-4 w-4" />

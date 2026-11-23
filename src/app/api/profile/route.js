@@ -51,12 +51,12 @@ export const PATCH = withUser(async (req, _ctx, user) => {
 
   const current = await prisma.user.findUnique({ where: { id: user.id }, select: { password: true } });
   if (!(await bcrypt.compare(parsed.data.currentPassword, current.password))) {
-    return fail('Password lama salah', 422, { fields: { currentPassword: ['Password lama salah'] } });
+    return fail('Kata sandi lama salah', 422, { fields: { currentPassword: ['Kata sandi lama salah'] } });
   }
 
   await prisma.user.update({
     where: { id: user.id },
     data: { password: await bcrypt.hash(parsed.data.newPassword, 12) },
   });
-  return ok({ message: 'Password berhasil diubah' });
+  return ok({ message: 'Kata sandi berhasil diubah' });
 });

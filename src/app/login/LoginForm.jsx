@@ -1,70 +1,82 @@
 'use client';
+
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { LogIn, ArrowRight, Zap } from 'lucide-react';
-export default function LoginForm({ demo = null }) {
-    const router = useRouter();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        login(email, password);
-    };
-    const login = async (email, password) => {
-        setError(null);
-        setLoading(true);
-        try {
-            const res = await signIn('credentials', {
-                redirect: false,
-                email,
-                password,
-            });
-            if (res?.error) {
-                setError(res.error);
-                setLoading(false);
-                return;
-            }
-            router.push('/dashboard');
-            router.refresh();
-        }
-        catch {
-            setError('Terjadi kendala saat login. Silakan coba lagi.');
-            setLoading(false);
-        }
-    };
-    return (<form onSubmit={handleSubmit} className="space-y-4">
-      {error && (<div className="p-3.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-          {error}
-        </div>)}
+import { ArrowRight, LogIn, Zap } from 'lucide-react';
+import { Alert, buttonClass, Field, inputClass } from '@/components/ui';
 
-      <div>
-        <label className="block text-xs font-medium text-slate-300 mb-1.5">Email Akun</label>
-        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nama@kontraktor.com" className="w-full px-3.5 py-2.5 rounded-lg bg-slate-900/60 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 text-sm transition"/>
-      </div>
+/**
+ * @param {{ demo?: { email: string, password: string } | null, callbackUrl?: string }} props
+ * demo = tombol masuk cepat (hanya dikirim server saat development).
+ * callbackUrl = halaman yang tadi dibuka sebelum diminta login.
+ */
+export default function LoginForm({ demo = null, callbackUrl = '/dashboard' }) {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-      <div>
-        <label className="block text-xs font-medium text-slate-300 mb-1.5">Kata Sandi</label>
-        <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full px-3.5 py-2.5 rounded-lg bg-slate-900/60 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 text-sm transition"/>
-      </div>
+  const login = async (loginEmail, loginPassword) => {
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await signIn('credentials', { redirect: false, email: loginEmail, password: loginPassword });
+      if (res?.error) {
+        setError(res.error === 'CredentialsSignin' ? 'Email atau kata sandi salah' : res.error);
+        setLoading(false);
+        return;
+      }
+      // Tetap "loading" sampai pindah halaman, supaya tombol tidak bisa diklik dua kali
+      router.push(callbackUrl);
+      router.refresh();
+    } catch {
+      setError('Terjadi kendala saat masuk. Silakan coba lagi.');
+      setLoading(false);
+    }
+  };
 
-      <button type="submit" disabled={loading} className="w-full mt-2 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-medium text-sm transition disabled:opacity-60 shadow-lg shadow-cyan-500/20 cursor-pointer">
-        {loading ? (<span>Memverifikasi...</span>) : (<>
-            <LogIn className="w-4 h-4"/>
-            <span>Masuk ke Dashboard</span>
-            <ArrowRight className="w-4 h-4"/>
-          </>)}
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!email.trim() || !password) return setError('Email dan kata sandi wajib diisi');
+    login(email, password);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      <Alert>{error}</Alert>
+
+      <Field label="Email" required>
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nama@kontraktor.com" autoComplete="email" className={inputClass} />
+      </Field>
+      <Field label="Kata sandi" required>
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password" className={inputClass} />
+      </Field>
+
+      <button type="submit" disabled={loading} className={`${buttonClass.primary} mt-2 w-full py-2.5`}>
+        {loading ? (
+          'Memverifikasi…'
+        ) : (
+          <>
+            <LogIn className="h-4 w-4" /> Masuk <ArrowRight className="h-4 w-4" />
+          </>
+        )}
       </button>
 
-      {demo && (<div className="border-t border-slate-800 pt-4">
-          <button type="button" disabled={loading} onClick={() => login(demo.email, demo.password)} className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20 font-medium text-sm transition disabled:opacity-60 cursor-pointer">
-            <Zap className="w-4 h-4"/>
-            <span>Masuk cepat sebagai {demo.email}</span>
+      {demo && (
+        <div className="border-t border-slate-800 pt-4">
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => login(demo.email, demo.password)}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-sm font-medium text-amber-200 transition hover:bg-amber-500/20 disabled:opacity-60"
+          >
+            <Zap className="h-4 w-4" /> Masuk cepat sebagai {demo.email}
           </button>
           <p className="mt-2 text-center text-[11px] text-slate-500">Hanya muncul saat development (npm run dev)</p>
-        </div>)}
-    </form>);
+        </div>
+      )}
+    </form>
+  );
 }

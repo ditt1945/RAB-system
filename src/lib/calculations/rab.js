@@ -6,6 +6,21 @@ const d = (value) => new Decimal(value == null || value === '' ? 0 : value.toStr
 const money = (value) => value.toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
 /**
+ * Batas angka, disesuaikan dengan ukuran kolom database:
+ * harga Decimal(15,2), volume Decimal(15,3), jumlah Decimal(17,2), koefisien Decimal(12,6).
+ */
+export const LIMITS = {
+  price: 999_999_999_999, // < 1 triliun per satuan
+  volume: 999_999_999,
+  subtotal: 999_999_999_999_999, // < 1.000 triliun per item
+  coefficient: 999_999,
+};
+
+/** Bulatkan seperti cara database menyimpan: volume 3 desimal, harga 2 desimal. */
+export const roundVolume = (value) => d(value).toDecimalPlaces(3, Decimal.ROUND_HALF_UP).toNumber();
+export const roundMoney = (value) => money(d(value)).toNumber();
+
+/**
  * Harga satuan pekerjaan (HSP) dari satu AHSP.
  * Format Permen PUPR No. 1/2022:
  *   A. Upah  = Σ koef × harga upah
@@ -40,9 +55,12 @@ export function calculateAhspPrice(ahsp) {
   };
 }
 
-/** Subtotal satu item RAB = volume × harga satuan. */
+/**
+ * Subtotal satu item RAB = volume × harga satuan.
+ * Volume dan harga dibulatkan dulu seperti di database, supaya angka di layar, rekap, dan PDF selalu sama.
+ */
 export function calculateRabItemSubtotal(volume, unitPrice) {
-  return money(d(volume).times(d(unitPrice))).toNumber();
+  return money(d(roundVolume(volume)).times(d(roundMoney(unitPrice)))).toNumber();
 }
 
 /**
@@ -61,7 +79,7 @@ export function calculateRabItemSubtotal(volume, unitPrice) {
  * jadi margin proyek default 0% dan hanya dipakai bila perlu tambahan.
  */
 export function calculateProjectSummary({ items = [], rabDiscount, rabServiceFee, targetMarginPercent, rabTaxPercent }) {
-  const itemsSubtotal = items.reduce((sum, item) => sum.plus(money(d(item.volume).times(d(item.unitPrice)))), d(0));
+  const itemsSubtotal = items.reduce((sum, item) => sum.plus(calculateRabItemSubtotal(item.volume, item.unitPrice)), d(0));
 
   const discountAmount = Decimal.min(d(rabDiscount), itemsSubtotal);
   const afterDiscount = itemsSubtotal.minus(discountAmount);
@@ -89,6 +107,7 @@ export function calculateProjectSummary({ items = [], rabDiscount, rabServiceFee
 
 /**
  * Kelompokkan item per groupName, dengan subtotal per kelompok.
+ * Subtotal memakai rumus yang sama dengan rekap, jadi jumlah semua kelompok = jumlah harga pekerjaan.
  * Urutan: kelompok yang ada di `order` (mis. urutan kategori AHSP) lebih dulu, sisanya menurut kemunculan.
  * @param {string[]} [order]
  */
@@ -98,12 +117,50 @@ export function groupRabItems(items, order = []) {
     const key = item.groupName || 'Lain-lain';
     if (!groups.has(key)) groups.set(key, { name: key, items: [], subtotal: d(0) });
     const group = groups.get(key);
-    group.items.push(item);
-    group.subtotal = group.subtotal.plus(d(item.subtotal));
+    const subtotal = calculateRabItemSubtotal(item.volume, item.unitPrice);
+    group.items.push({ ...item, subtotal });
+    group.subtotal = group.subtotal.plus(subtotal);
   }
   const rank = (name) => (order.includes(name) ? order.indexOf(name) : order.length);
   return [...groups.values()]
     .map((group, index) => ({ ...group, index, subtotal: group.subtotal.toNumber() }))
     .sort((a, b) => rank(a.name) - rank(b.name) || a.index - b.index)
     .map(({ index, ...group }) => group);
+}
+
+/**
+ * Kebutuhan material (bahan) dari pekerjaan AHSP.
+ * Jumlah bahan = Σ (koefisien bahan × volume pekerjaan), dijumlahkan per jenis bahan.
+ *
+ * @param {Array<{ volume: any, components: Array<{ coefficient: any, resource: { id: any, code: string, name: string, unit: string, type: string, unitPrice: any } }> }>} works
+ * @param {{ types?: string[] }} [options] jenis sumber daya yang dihitung, default hanya bahan
+ * @returns {{ items: Array<{ resourceId: string, code: string, name: string, unit: string, quantity: number, unitPrice: number, amount: number }>, total: number }}
+ */
+export function calculateMaterialNeeds(works, { types = ['bahan'] } = {}) {
+  const byResource = new Map();
+  for (const work of works) {
+    for (const component of work.components || []) {
+      const resource = component.resource;
+      if (!resource || !types.includes(resource.type)) continue;
+      const key = String(resource.id ?? resource.code);
+      if (!byResource.has(key)) {
+        byResource.set(key, { resourceId: key, code: resource.code, name: resource.name, unit: resource.unit, unitPrice: resource.unitPrice, quantity: d(0) });
+      }
+      const row = byResource.get(key);
+      row.quantity = row.quantity.plus(d(component.coefficient).times(d(work.volume)));
+    }
+  }
+
+  let total = d(0);
+  const items = [...byResource.values()]
+    .map((row) => {
+      const quantity = row.quantity.toDecimalPlaces(3, Decimal.ROUND_HALF_UP);
+      const amount = money(quantity.times(d(row.unitPrice)));
+      total = total.plus(amount);
+      return { ...row, quantity: quantity.toNumber(), unitPrice: d(row.unitPrice).toNumber(), amount: amount.toNumber() };
+    })
+    .filter((row) => row.quantity > 0)
+    .sort((a, b) => a.code.localeCompare(b.code, 'id', { numeric: true }));
+
+  return { items, total: total.toNumber() };
 }

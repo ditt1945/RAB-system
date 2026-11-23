@@ -57,7 +57,7 @@ export default async function DashboardPage() {
   const stats = [
     { label: 'Total proyek', value: projects.length, icon: FolderKanban, color: 'text-cyan-300' },
     { label: 'Perencanaan / berjalan', value: `${count('planning')} / ${count('progress')}`, icon: Clock, color: 'text-amber-300' },
-    { label: 'Selesai', value: count('completed'), icon: CheckCircle2, color: 'text-emerald-300' },
+    { label: 'Selesai / dibatalkan', value: `${count('completed')} / ${count('cancelled')}`, icon: CheckCircle2, color: 'text-emerald-300' },
     { label: 'Nilai RAB (tidak termasuk batal)', value: rupiah(activeValue), icon: Calculator, color: 'text-white' },
   ];
 

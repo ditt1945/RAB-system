@@ -18,6 +18,8 @@ export default function RabEditor({ projectId, groups, catalog, hasAhspItems }) 
   const [showAdd, setShowAdd] = useState(groups.length === 0);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const working = busy || pending;
   const groupNames = groups.map((g) => g.name);
 
   // Pesan sukses hilang sendiri supaya tidak menumpuk di atas tabel
@@ -33,7 +35,23 @@ export default function RabEditor({ projectId, groups, catalog, hasAhspItems }) 
     startTransition(() => router.refresh());
   };
 
-  const saveEdit = async () => {
+  // Jalankan satu aksi sekaligus; aksi lain diabaikan selama masih berjalan
+  const run = async (action) => {
+    if (working) return;
+    setBusy(true);
+    try {
+      await action();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditing(null);
+    setError(null);
+  };
+
+  const saveEdit = () => run(async () => {
     const res = await api(`/api/projects/${projectId}/items/${editing.id}`, {
       method: 'PATCH',
       body: {
@@ -48,20 +66,20 @@ export default function RabEditor({ projectId, groups, catalog, hasAhspItems }) 
     if (!res.ok) return setError(Object.values(res.fields)[0]?.[0] ?? res.error);
     setEditing(null);
     refresh('Item diperbarui');
-  };
+  });
 
-  const remove = async (item) => {
+  const remove = (item) => run(async () => {
     if (!window.confirm(`Hapus "${item.name}" dari RAB?`)) return;
     const res = await api(`/api/projects/${projectId}/items/${item.id}`, { method: 'DELETE' });
     if (!res.ok) return setError(res.error);
     refresh('Item dihapus');
-  };
+  });
 
-  const reprice = async (itemId) => {
+  const reprice = (itemId) => run(async () => {
     const res = await api(`/api/projects/${projectId}/items/reprice`, { method: 'POST', body: itemId ? { itemId } : {} });
     if (!res.ok) return setError(res.error);
     refresh(res.data.message);
-  };
+  });
 
   const editField = (key) => (e) => setEditing((v) => ({ ...v, [key]: e.target.value }));
 
@@ -71,7 +89,7 @@ export default function RabEditor({ projectId, groups, catalog, hasAhspItems }) 
       e.preventDefault();
       saveEdit();
     } else if (e.key === 'Escape') {
-      setEditing(null);
+      cancelEdit();
     }
   };
 
@@ -82,7 +100,7 @@ export default function RabEditor({ projectId, groups, catalog, hasAhspItems }) 
       actions={
         <>
           {hasAhspItems && (
-            <button type="button" onClick={() => reprice()} disabled={pending} className={buttonClass.secondary}>
+            <button type="button" onClick={() => reprice()} disabled={working} className={buttonClass.secondary}>
               <RefreshCw className="h-4 w-4" /> Perbarui harga
             </button>
           )}
@@ -160,10 +178,10 @@ export default function RabEditor({ projectId, groups, catalog, hasAhspItems }) 
                           </td>
                           <td className="px-3 py-2">
                             <div className="flex justify-end gap-1">
-                              <button type="button" onClick={saveEdit} className={buttonClass.ghost} title="Simpan (Enter)">
+                              <button type="button" onClick={saveEdit} disabled={working} className={buttonClass.ghost} title="Simpan (Enter)" aria-label="Simpan perubahan">
                                 <Check className="h-4 w-4 text-emerald-400" />
                               </button>
-                              <button type="button" onClick={() => setEditing(null)} className={buttonClass.ghost} title="Batal (Esc)">
+                              <button type="button" onClick={cancelEdit} className={buttonClass.ghost} title="Batal (Esc)" aria-label="Batal edit">
                                 <X className="h-4 w-4" />
                               </button>
                             </div>
@@ -183,14 +201,14 @@ export default function RabEditor({ projectId, groups, catalog, hasAhspItems }) 
                           <td className="px-3 py-2">
                             <div className="flex justify-end gap-0.5">
                               {item.ahspId && (
-                                <button type="button" onClick={() => reprice(item.id)} className={buttonClass.ghost} title="Perbarui harga dari AHSP">
+                                <button type="button" onClick={() => reprice(item.id)} disabled={working} className={buttonClass.ghost} title="Perbarui harga dari AHSP" aria-label={`Perbarui harga ${item.name}`}>
                                   <RefreshCw className="h-3.5 w-3.5" />
                                 </button>
                               )}
-                              <button type="button" onClick={() => setEditing({ ...item })} className={buttonClass.ghost} title="Edit">
+                              <button type="button" onClick={() => { setError(null); setEditing({ ...item }); }} disabled={working} className={buttonClass.ghost} title="Edit" aria-label={`Edit ${item.name}`}>
                                 <Pencil className="h-3.5 w-3.5" />
                               </button>
-                              <button type="button" onClick={() => remove(item)} className={buttonClass.ghost} title="Hapus">
+                              <button type="button" onClick={() => remove(item)} disabled={working} className={buttonClass.ghost} title="Hapus" aria-label={`Hapus ${item.name}`}>
                                 <Trash2 className="h-3.5 w-3.5 text-red-400" />
                               </button>
                             </div>

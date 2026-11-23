@@ -7,8 +7,23 @@ import LoginForm from './LoginForm';
 
 export const metadata = { title: 'Masuk - Sistem RAB Kontraktor' };
 
-export default async function LoginPage() {
-  if (await getServerSession(authOptions)) redirect('/dashboard');
+/**
+ * Ambil hanya path dari callbackUrl (NextAuth mengirim URL lengkap), supaya
+ * setelah login pengguna kembali ke halaman tadi dan tidak bisa diarahkan ke situs lain.
+ */
+function safeCallback(value) {
+  try {
+    const url = new URL(String(value ?? ''), 'http://localhost');
+    const path = url.pathname + url.search;
+    return path.startsWith('/') && !path.startsWith('//') && !path.startsWith('/login') ? path : '/dashboard';
+  } catch {
+    return '/dashboard';
+  }
+}
+
+export default async function LoginPage({ searchParams }) {
+  const callbackUrl = safeCallback((await searchParams).callbackUrl);
+  if (await getServerSession(authOptions)) redirect(callbackUrl);
 
   // Shortcut login untuk development saja. Di production (npm run build/start) tombolnya tidak ada.
   const { DEMO_LOGIN_EMAIL: email, DEMO_LOGIN_PASSWORD: password } = process.env;
@@ -27,7 +42,7 @@ export default async function LoginPage() {
         </>
       }
     >
-      <LoginForm demo={demo} />
+      <LoginForm demo={demo} callbackUrl={callbackUrl} />
     </AuthCard>
   );
 }

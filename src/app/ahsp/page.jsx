@@ -1,9 +1,10 @@
 import { Fragment } from 'react';
 import Link from 'next/link';
-import { Calculator, PlusCircle, Search, Wrench } from 'lucide-react';
+import { Calculator, FolderTree, PlusCircle, Search, Wrench } from 'lucide-react';
 import { requirePageUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { listAhsp } from '@/lib/ahsp';
+import { parseId } from '@/lib/api';
 import { rupiah } from '@/lib/format';
 import AppShell from '@/components/AppShell';
 import { buttonClass, Card, EmptyState, inputClass, PageHeader } from '@/components/ui';
@@ -18,7 +19,7 @@ export default async function AhspListPage({ searchParams }) {
     prisma.ahspCategory.findMany({ orderBy: { sortOrder: 'asc' } }),
     listAhsp({
       q: q.trim() || undefined,
-      categoryId: /^\d+$/.test(category) ? BigInt(category) : undefined,
+      categoryId: parseId(category) ?? undefined,
       includeInactive: user.isAdmin,
     }),
   ]);
@@ -34,6 +35,9 @@ export default async function AhspListPage({ searchParams }) {
         description="Analisa Harga Satuan Pekerjaan: harga per satuan pekerjaan dihitung dari koefisien × harga upah, bahan, dan alat, ditambah overhead & keuntungan."
         actions={
           <>
+            <Link href="/ahsp/categories" className={buttonClass.secondary}>
+              <FolderTree className="h-4 w-4" /> Kategori
+            </Link>
             <Link href="/ahsp/resources" className={buttonClass.secondary}>
               <Wrench className="h-4 w-4" /> Harga upah, bahan, alat
             </Link>

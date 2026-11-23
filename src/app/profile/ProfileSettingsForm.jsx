@@ -1,102 +1,97 @@
 'use client';
-import { useEffect, useState } from 'react';
-export default function ProfileSettingsForm() {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [currentPassword, setCurrentPassword] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [profileMsg, setProfileMsg] = useState('');
-    const [profileErr, setProfileErr] = useState('');
-    const [pwdMsg, setPwdMsg] = useState('');
-    const [pwdErr, setPwdErr] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [savingProfile, setSavingProfile] = useState(false);
-    const [savingPwd, setSavingPwd] = useState(false);
-    useEffect(() => {
-        fetch('/api/profile')
-            .then(async (response) => {
-            if (!response.ok)
-                throw new Error('Gagal mengambil data profil');
-            const result = await response.json();
-            if (result.data) {
-                setName(result.data.name || '');
-                setEmail(result.data.email || '');
-            }
-        })
-            .catch((error) => setProfileErr(error.message))
-            .finally(() => setLoading(false));
-    }, []);
-    async function handleUpdateProfile(event) {
-        event.preventDefault();
-        setSavingProfile(true);
-        setProfileMsg('');
-        setProfileErr('');
-        try {
-            const response = await fetch('/api/profile', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email }),
-            });
-            const result = await response.json();
-            if (!response.ok)
-                throw new Error(result.error || 'Gagal update profil');
-            setProfileMsg('Data akun berhasil diperbarui.');
-        }
-        catch (error) {
-            setProfileErr(error instanceof Error ? error.message : 'Gagal simpan profil');
-        }
-        finally {
-            setSavingProfile(false);
-        }
-    }
-    async function handleChangePassword(event) {
-        event.preventDefault();
-        setSavingPwd(true);
-        setPwdMsg('');
-        setPwdErr('');
-        try {
-            const response = await fetch('/api/profile', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ currentPassword, newPassword }),
-            });
-            const result = await response.json();
-            if (!response.ok)
-                throw new Error(result.error || 'Gagal ganti kata sandi');
-            setPwdMsg('Kata sandi berhasil diperbarui.');
-            setCurrentPassword('');
-            setNewPassword('');
-        }
-        catch (error) {
-            setPwdErr(error instanceof Error ? error.message : 'Gagal ubah sandi');
-        }
-        finally {
-            setSavingPwd(false);
-        }
-    }
-    if (loading)
-        return <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 text-sm text-slate-400">Memuat profil...</div>;
-    return (<div className="space-y-6">
-      <form onSubmit={handleUpdateProfile} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 sm:p-7 space-y-4">
-        <h2 className="text-base font-semibold text-white">Informasi Dasar</h2>
-        {profileMsg && <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300">{profileMsg}</div>}
-        {profileErr && <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">{profileErr}</div>}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm text-slate-300">Nama lengkap<input required value={name} onChange={(event) => setName(event.target.value)} className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-cyan-500"/></label>
-          <label className="block text-sm text-slate-300">Email<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-cyan-500"/></label>
-        </div>
-        <button disabled={savingProfile} className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50">{savingProfile ? 'Menyimpan...' : 'Perbarui Akun'}</button>
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { api } from '@/lib/client';
+import { Alert, buttonClass, Card, Field, inputClass } from '@/components/ui';
+
+const IDLE = { saving: false, error: null, errors: {}, message: null };
+
+/** @param {{ profile: { name: string, email: string, phoneNumber?: string|null, department?: string|null } }} props */
+export default function ProfileSettingsForm({ profile }) {
+  const router = useRouter();
+  const [form, setForm] = useState({
+    name: profile.name ?? '',
+    email: profile.email ?? '',
+    phoneNumber: profile.phoneNumber ?? '',
+    department: profile.department ?? '',
+  });
+  const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '' });
+  const [profileState, setProfileState] = useState(IDLE);
+  const [passwordState, setPasswordState] = useState(IDLE);
+
+  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+  const setPassword = (key) => (e) => setPasswords((p) => ({ ...p, [key]: e.target.value }));
+
+  const saveProfile = async (e) => {
+    e.preventDefault();
+    setProfileState({ ...IDLE, saving: true });
+    const res = await api('/api/profile', { method: 'PUT', body: form });
+    if (!res.ok) return setProfileState({ ...IDLE, error: res.error, errors: res.fields });
+    setProfileState({ ...IDLE, message: 'Data akun berhasil diperbarui' });
+    router.refresh();
+  };
+
+  const savePassword = async (e) => {
+    e.preventDefault();
+    setPasswordState({ ...IDLE, saving: true });
+    const res = await api('/api/profile', { method: 'PATCH', body: passwords });
+    if (!res.ok) return setPasswordState({ ...IDLE, error: res.error, errors: res.fields });
+    setPasswords({ currentPassword: '', newPassword: '' });
+    setPasswordState({ ...IDLE, message: 'Kata sandi berhasil diubah' });
+  };
+
+  return (
+    <div className="space-y-6">
+      <form onSubmit={saveProfile} noValidate>
+        <Card title="Informasi akun">
+          <div className="space-y-4">
+            <Alert>{profileState.error}</Alert>
+            {profileState.message && <Alert type="success">{profileState.message}</Alert>}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Nama lengkap" required error={profileState.errors.name}>
+                <input className={inputClass} value={form.name} onChange={set('name')} autoComplete="name" />
+              </Field>
+              <Field label="Email (untuk masuk)" required error={profileState.errors.email}>
+                <input type="email" className={inputClass} value={form.email} onChange={set('email')} autoComplete="email" />
+              </Field>
+              <Field label="Nomor telepon" error={profileState.errors.phoneNumber}>
+                <input className={inputClass} value={form.phoneNumber} onChange={set('phoneNumber')} autoComplete="tel" />
+              </Field>
+              <Field label="Jabatan / bagian" error={profileState.errors.department}>
+                <input className={inputClass} value={form.department} onChange={set('department')} placeholder="Estimator, pemilik, ..." />
+              </Field>
+            </div>
+            <div className="flex justify-end">
+              <button type="submit" disabled={profileState.saving} className={buttonClass.primary}>
+                {profileState.saving ? 'Menyimpan…' : 'Simpan data akun'}
+              </button>
+            </div>
+          </div>
+        </Card>
       </form>
 
-      <form onSubmit={handleChangePassword} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 sm:p-7 space-y-4">
-        <h2 className="text-base font-semibold text-white">Ganti Kata Sandi</h2>
-        {pwdMsg && <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300">{pwdMsg}</div>}
-        {pwdErr && <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">{pwdErr}</div>}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm text-slate-300">Kata sandi saat ini<input required type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-cyan-500"/></label>
-          <label className="block text-sm text-slate-300">Kata sandi baru<input required minLength={8} type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} className="mt-1.5 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-cyan-500"/></label>
-        </div>
-        <button disabled={savingPwd} className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50">{savingPwd ? 'Memperbarui...' : 'Ubah Sandi'}</button>
+      <form onSubmit={savePassword} noValidate>
+        <Card title="Ganti kata sandi">
+          <div className="space-y-4">
+            <Alert>{passwordState.error}</Alert>
+            {passwordState.message && <Alert type="success">{passwordState.message}</Alert>}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Kata sandi saat ini" required error={passwordState.errors.currentPassword}>
+                <input type="password" className={inputClass} value={passwords.currentPassword} onChange={setPassword('currentPassword')} autoComplete="current-password" />
+              </Field>
+              <Field label="Kata sandi baru" required error={passwordState.errors.newPassword} hint="Minimal 8 karakter">
+                <input type="password" className={inputClass} value={passwords.newPassword} onChange={setPassword('newPassword')} autoComplete="new-password" />
+              </Field>
+            </div>
+            <div className="flex justify-end">
+              <button type="submit" disabled={passwordState.saving} className={buttonClass.secondary}>
+                {passwordState.saving ? 'Mengubah…' : 'Ubah kata sandi'}
+              </button>
+            </div>
+          </div>
+        </Card>
       </form>
-    </div>);
+    </div>
+  );
 }

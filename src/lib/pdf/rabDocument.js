@@ -17,7 +17,10 @@ const TABLE_WIDTH = COLUMNS.reduce((sum, c) => sum + c.width, 0); // 515
 const PAD = 3;
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-export function generateRabPdfBuffer({ project, groups, summary, company, preparedBy }) {
+/**
+ * @param {{ project, groups, summary, company, preparedBy, materials?: { items: any[], total: number }, logo?: Buffer | null }} rab
+ */
+export function generateRabPdfBuffer({ project, groups, summary, company, preparedBy, materials, logo }) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', margin: MARGIN, bufferPages: true, info: { Title: `RAB ${project.projectName}` } });
     const chunks = [];
@@ -30,7 +33,14 @@ export function generateRabPdfBuffer({ project, groups, summary, company, prepar
 
     // ── Kop ────────────────────────────────────────────────────────────
     if (company?.companyName) {
-      doc.font('Helvetica-Bold').fontSize(14).text(company.companyName.toUpperCase(), { align: 'center' });
+      if (logo) {
+        try {
+          doc.image(logo, left, MARGIN - 4, { fit: [56, 44] });
+        } catch {
+          // Gambar rusak: kop tetap dibuat tanpa logo
+        }
+      }
+      doc.font('Helvetica-Bold').fontSize(14).text(company.companyName.toUpperCase(), left, MARGIN, { align: 'center', width: TABLE_WIDTH });
       doc.font('Helvetica').fontSize(9).fillColor('#444');
       const contact = [company.address, company.phone && `Telp. ${company.phone}`, company.email].filter(Boolean).join('  ·  ');
       doc.text(contact, { align: 'center' });
@@ -81,13 +91,13 @@ export function generateRabPdfBuffer({ project, groups, summary, company, prepar
     };
 
     // Baris yang menggabungkan kolom kiri (label) dan kolom Jumlah
-    const drawSpanRow = (label, value, { bold = false, fill = null } = {}) => {
+    const drawSpanRow = (label, value, { bold = false, fill = null, repeatHeader = true } = {}) => {
       doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(8.5);
       const labelWidth = TABLE_WIDTH - COLUMNS.at(-1).width;
       const height = doc.heightOfString(label, { width: labelWidth - PAD * 2 }) + PAD * 2;
       if (doc.y + height > bottom()) {
         doc.addPage();
-        drawHeader();
+        if (repeatHeader) drawHeader();
       }
       const y = doc.y;
       if (fill) doc.rect(left, y, TABLE_WIDTH, height).fill(fill).fillColor('#000');
@@ -133,17 +143,66 @@ export function generateRabPdfBuffer({ project, groups, summary, company, prepar
     doc.moveDown(0.5);
     doc.font('Helvetica-Oblique').fontSize(9).text(`Terbilang: ${terbilang(summary.grandTotal)}`, left, doc.y, { width: TABLE_WIDTH });
 
-    // ── Tanda tangan ───────────────────────────────────────────────────
-    if (doc.y + 110 > bottom()) doc.addPage();
+    // ── Tanda tangan: kiri pemilik/klien (menyetujui), kanan pembuat RAB ─
+    if (doc.y + 120 > bottom()) doc.addPage();
     doc.moveDown(2);
-    const signX = left + TABLE_WIDTH - 200;
-    const signY = doc.y;
+    const signWidth = 200;
+    const rightX = left + TABLE_WIDTH - signWidth;
+    const top = doc.y;
     doc.font('Helvetica').fontSize(9.5);
-    doc.text(`${project.location || '..................'}, ${tanggal(new Date())}`, signX, signY, { width: 200, align: 'center' });
-    doc.text('Dibuat oleh,', signX, doc.y, { width: 200, align: 'center' });
-    if (company?.companyName) doc.text(company.companyName, signX, doc.y, { width: 200, align: 'center' });
-    doc.moveDown(4);
-    doc.font('Helvetica-Bold').text(preparedBy || '(..............................)', signX, doc.y, { width: 200, align: 'center', underline: true });
+    doc.text(`${project.location || '..................'}, ${tanggal(new Date())}`, rightX, top, { width: signWidth, align: 'center' });
+    const labelY = doc.y;
+    doc.text('Disetujui oleh,', left, labelY, { width: signWidth, align: 'center' });
+    doc.text('Pemilik / Klien', left, doc.y, { width: signWidth, align: 'center' });
+    doc.text('Dibuat oleh,', rightX, labelY, { width: signWidth, align: 'center' });
+    doc.text(company?.companyName || ' ', rightX, doc.y, { width: signWidth, align: 'center' });
+    const nameY = doc.y + 52;
+    doc.font('Helvetica-Bold');
+    doc.text(project.clientName || '(..............................)', left, nameY, { width: signWidth, align: 'center', underline: true });
+    doc.text(preparedBy || '(..............................)', rightX, nameY, { width: signWidth, align: 'center', underline: true });
+    doc.x = left;
+
+    // ── Lampiran: kebutuhan material ──────────────────────────────────
+    if (materials?.items?.length) {
+      doc.addPage();
+      doc.font('Helvetica-Bold').fontSize(12).text('LAMPIRAN: PERKIRAAN KEBUTUHAN MATERIAL', left, MARGIN, { align: 'center', width: TABLE_WIDTH });
+      doc.font('Helvetica').fontSize(8.5).fillColor('#444');
+      doc.text(
+        `${project.projectName}. Dihitung dari koefisien bahan AHSP × volume pekerjaan (item manual tidak termasuk). Harga bahan sesuai master harga saat dokumen dibuat.`,
+        left,
+        doc.y + 4,
+        { align: 'center', width: TABLE_WIDTH },
+      );
+      doc.fillColor('#000').moveDown(0.8);
+
+      const cols = [
+        { label: 'No', width: 26, align: 'center' },
+        { label: 'Kode', width: 58, align: 'left' },
+        { label: 'Nama Bahan', width: 189, align: 'left' },
+        { label: 'Jumlah', width: 70, align: 'right' },
+        { label: 'Sat.', width: 40, align: 'center' },
+        { label: 'Harga Satuan', width: 66, align: 'right' },
+        { label: 'Perkiraan Biaya', width: 66, align: 'right' },
+      ];
+      const row = (cells, { bold = false, fill = null } = {}) => {
+        doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(8.5);
+        const height = Math.max(...cols.map((c, i) => doc.heightOfString(String(cells[i] ?? ''), { width: c.width - PAD * 2 }))) + PAD * 2;
+        if (doc.y + height > bottom()) doc.addPage();
+        const y = doc.y;
+        if (fill) doc.rect(left, y, TABLE_WIDTH, height).fill(fill).fillColor('#000');
+        let x = left;
+        cols.forEach((c, i) => {
+          doc.rect(x, y, c.width, height).lineWidth(0.5).strokeColor('#666').stroke();
+          doc.text(String(cells[i] ?? ''), x + PAD, y + PAD, { width: c.width - PAD * 2, align: bold && fill ? 'center' : c.align });
+          x += c.width;
+        });
+        doc.x = left;
+        doc.y = y + height;
+      };
+      row(cols.map((c) => c.label), { bold: true, fill: '#e5e7eb' });
+      materials.items.forEach((m, i) => row([i + 1, m.code, m.name, angka(m.quantity, 3), m.unit, rupiah(m.unitPrice), rupiah(m.amount)]));
+      drawSpanRow('PERKIRAAN TOTAL BIAYA BAHAN', rupiah(materials.total), { bold: true, repeatHeader: false });
+    }
 
     // ── Nomor halaman ──────────────────────────────────────────────────
     const range = doc.bufferedPageRange();

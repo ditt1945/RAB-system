@@ -58,7 +58,11 @@ export default function AddItemForm({ projectId, catalog, groupNames, onAdded })
   const tab = (value, label) => (
     <button
       type="button"
-      onClick={() => setMode(value)}
+      onClick={() => {
+        setMode(value);
+        setError(null);
+        setErrors({});
+      }}
       className={`rounded-md px-3 py-1.5 text-sm ${mode === value ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
       aria-pressed={mode === value}
     >
@@ -87,14 +91,13 @@ export default function AddItemForm({ projectId, catalog, groupNames, onAdded })
                 aria-label="Cari AHSP"
               />
             </div>
-            <ul className="mt-2 max-h-64 divide-y divide-slate-800 overflow-y-auto rounded-lg border border-slate-800" role="listbox" aria-label="Katalog AHSP">
+            <ul className="mt-2 max-h-64 divide-y divide-slate-800 overflow-y-auto rounded-lg border border-slate-800" aria-label="Katalog AHSP">
               {filtered.length === 0 && <li className="px-3 py-4 text-center text-xs text-slate-500">Tidak ada AHSP yang cocok</li>}
               {filtered.map((a) => (
                 <li key={a.id}>
                   <button
                     type="button"
-                    role="option"
-                    aria-selected={selected?.id === a.id}
+                    aria-pressed={selected?.id === a.id}
                     onClick={() => choose(a)}
                     className={`flex w-full items-start justify-between gap-3 px-3 py-2 text-left text-sm ${
                       selected?.id === a.id ? 'bg-cyan-500/15' : 'hover:bg-slate-800/60'

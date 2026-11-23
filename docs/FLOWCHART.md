@@ -1,6 +1,6 @@
 # Flowchart: Sistem RAB Kontraktor
 
-Versi 2.1, 23 November 2026 (v2.0: 20 November 2026). Mengikuti `docs/PRD.md` v2.0. Versi lama ada di `docs/_old/FLOWCHART-v1.md`.
+Versi 2.2, 23 November 2026 (v2.0: 20 November 2026). Mengikuti `docs/PRD.md` v2.0. Versi lama ada di `docs/_old/FLOWCHART-v1.md`.
 
 Sintaks Mermaid. Bisa dirender di VS Code (extension "Markdown Preview Mermaid Support"), GitHub, atau https://mermaid.live.
 
@@ -177,19 +177,24 @@ flowchart TD
     KEY -->|Ya| LOG[(Simpan AiRequest status processing)]
     LOG --> CTX[Siapkan prompt: deskripsi + data proyek<br/>+ katalog AHSP kode, nama, satuan]
     CTX --> API[Kirim ke Gemini API]
-    API --> OK{Balasan JSON valid?<br/>cek Zod}
+    API --> BUSY{Model utama penuh?}
+    BUSY -->|Ya| FB[Coba model cadangan] --> OK
+    BUSY -->|Tidak| OK{Balasan JSON valid?<br/>cek Zod}
     OK -->|Tidak / error| F[(Update AiRequest status failed)]
     F --> E2[Pesan: Rekomendasi gagal, coba lagi] --> X
     OK -->|Ya| MATCH[Cocokkan ahspCode ke database]
     MATCH --> PR[Hitung harga dari AHSP, bukan dari AI<br/>Saran tanpa kode = di luar katalog]
-    PR --> DONE[(Update AiRequest status completed)]
+    PR --> MAT[Ambil koefisien bahan tiap AHSP<br/>kebutuhan material = koefisien x volume]
+    MAT --> DONE[(Update AiRequest status completed)]
     DONE --> DUP[Saran yang pekerjaannya sudah ada di RAB<br/>ditandai dan tidak dicentang]
-    DUP --> SHOW[/"Tampilkan daftar saran + checkbox<br/>+ volume bisa diedit + total yang dipilih"/]
+    DUP --> SHOW[/"Tampilkan saran + checkbox, volume bisa diedit,<br/>total yang dipilih, kebutuhan material"/]
     SHOW --> PIL{User pilih saran?}
     PIL -->|Tidak ada| X
-    PIL -->|Ya| ADD[Buat RabItem untuk setiap saran terpilih<br/>lewat alur flowchart 5]
-    ADD --> ACC[(Isi AiRequest.acceptedAt)]
-    ACC --> X
+    PIL -->|Ya| SUDAH{acceptedAt sudah terisi?}
+    SUDAH -->|Ya| E3[Pesan: saran sudah dimasukkan] --> X
+    SUDAH -->|Tidak| ACC[(Isi AiRequest.acceptedAt)]
+    ACC --> ADD[Buat RabItem untuk setiap saran terpilih<br/>dalam satu transaksi]
+    ADD --> X
 ```
 
 ## 7. Preview & Export PDF (UKK #5)
@@ -199,13 +204,13 @@ flowchart TD
     S([Mulai]) --> CEK{Proyek milik user?}
     CEK -->|Tidak| N[404] --> X([Selesai])
     CEK -->|Ya| ITEM{Ada item RAB?}
-    ITEM -->|Tidak| KOS[Pesan: RAB masih kosong] --> X
+    ITEM -->|Tidak| KOS[Dokumen kosong + pesan & tautan tambah item<br/>tombol Cetak dan Export disembunyikan] --> X
     ITEM -->|Ya| AMB[(Ambil Project, RabItem,<br/>CompanySettings)]
     AMB --> HIT[Hitung ringkasan dengan fungsi yang sama<br/>dengan halaman proyek]
     HIT --> KOP{Data perusahaan sudah diisi?}
     KOP -->|Belum| WARN[Peringatan + tautan ke Data Perusahaan] --> PV
     KOP -->|Sudah| PV
-    PV[/"Halaman Preview: kop, identitas proyek,<br/>tabel per kelompok, rekap, terbilang, tanda tangan"/]
+    PV[/"Halaman Preview: kop + logo, identitas proyek,<br/>tabel per kelompok, rekap, terbilang, tanda tangan klien & pembuat,<br/>lampiran kebutuhan material"/]
     PV --> A{Export PDF?}
     A -->|Tidak| X
     A -->|Ya| GEN[Bangun PDF A4 dari data yang sama:<br/>header tabel diulang, nomor halaman]

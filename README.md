@@ -11,17 +11,17 @@ Aplikasi web untuk merencanakan dan menghitung **Rencana Anggaran Biaya (RAB)** 
 | Database | MySQL / MariaDB (Prisma ORM) |
 | Target pengguna | UMKM / Pengusaha, Karyawan / Perusahaan |
 
-Dokumen: [PRD](docs/PRD.md) · [Flowchart](docs/FLOWCHART.md) · [Audit](docs/AUDIT-2026-11-20.md)
+Dokumen: [PRD](docs/PRD.md) · [Flowchart](docs/FLOWCHART.md) · [Audit 20 Nov](docs/AUDIT-2026-11-20.md) · [Audit 23 Nov](docs/AUDIT-2026-11-23.md)
 
 ## Fitur (sesuai spesifikasi UKK)
 
-1. **Manajemen proyek dan data pekerjaan**: CRUD proyek, pencarian, filter status, dashboard.
+1. **Manajemen proyek dan data pekerjaan**: CRUD proyek, pencarian, filter status, dashboard dengan panduan langkah memulai. Alur proyek: Data proyek → Susun RAB → Preview & PDF.
 2. **Perhitungan RAB otomatis**: harga satuan dihitung dari AHSP (koefisien × harga upah/bahan/alat + overhead), subtotal = volume × harga satuan, rekap dengan PPN 11% dan pembulatan.
-3. **Rekomendasi AI (Gemini)**: AI memilih pekerjaan dari katalog AHSP dan memperkirakan volume. Harga tetap dari AHSP.
-4. **Penyimpanan dan pengelolaan RAB**: tambah item dari AHSP atau manual, edit, hapus, kelompok pekerjaan, perbarui harga.
-5. **Preview dan export PDF**: dokumen RAB dengan kop perusahaan, tabel per kelompok, rekapitulasi, terbilang, dan tanda tangan.
+3. **Rekomendasi AI pekerjaan dan material (Gemini)**: AI memilih pekerjaan dari katalog AHSP dan memperkirakan volume; sistem menghitung kebutuhan material dari koefisien bahan AHSP × volume. Harga tetap dari AHSP. Ada model cadangan kalau model utama penuh.
+4. **Penyimpanan dan pengelolaan RAB**: tambah item dari AHSP atau manual, edit, hapus, kelompok pekerjaan, perbarui harga, perkiraan kebutuhan material.
+5. **Preview dan export PDF**: dokumen RAB dengan kop + logo perusahaan, tabel per kelompok, rekapitulasi, terbilang, tanda tangan klien dan pembuat, serta lampiran kebutuhan material.
 
-Peran: **admin** (mengelola master AHSP dan harga) dan **estimator** (menyusun RAB, hanya bisa melihat master AHSP).
+Peran: **admin** (mengelola master AHSP, kategori, dan harga) dan **estimator** (menyusun RAB, hanya bisa melihat master AHSP).
 
 ## Menjalankan
 
@@ -35,9 +35,11 @@ npx prisma db seed          # data AHSP + akun admin + proyek contoh
 npm run dev                 # http://localhost:3000
 ```
 
-Seed membuat akun admin `admin@rab.local`. Jika `SEED_ADMIN_PASSWORD` tidak diisi, password acak dicetak sekali di terminal.
+Seed membuat akun admin `admin@rab.local`. Jika `SEED_ADMIN_PASSWORD` tidak diisi, kata sandi acak dicetak sekali di terminal.
 
-Perintah lain: `npm test` (unit test perhitungan), `npm run lint`, `npm run build`.
+Saat development, isi `DEMO_LOGIN_EMAIL` dan `DEMO_LOGIN_PASSWORD` di `.env` untuk memunculkan tombol "Masuk cepat" di halaman login (tidak muncul di production).
+
+Perintah lain: `npm test` (unit test perhitungan, pembulatan, kebutuhan material, validasi), `npm run lint`, `npm run build`.
 
 ## Struktur
 

@@ -1,11 +1,16 @@
 import { hash } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import { fail, ok, readJson, validationFailed } from '@/lib/api';
+import { fail, ok, prismaErrorResponse, readJson, validationFailed } from '@/lib/api';
+import { clientIp, hit } from '@/lib/rate-limit';
 import { registerSchema } from '@/lib/validation/schemas';
 
 // Pendaftaran mandiri selalu mendapat role estimator.
 export async function POST(req) {
   try {
+    if (!hit(`register:${clientIp(req)}`, { limit: 10, windowMs: 60 * 60 * 1000 })) {
+      return fail('Terlalu banyak pendaftaran dari perangkat ini. Coba lagi nanti.', 429);
+    }
+
     const parsed = registerSchema.safeParse(await readJson(req));
     if (!parsed.success) return validationFailed(parsed.error);
 
@@ -25,6 +30,9 @@ export async function POST(req) {
     });
     return ok({ message: 'Akun berhasil dibuat', data: user }, { status: 201 });
   } catch (error) {
+    // Dua pendaftaran email yang sama di waktu bersamaan → P2002
+    const known = prismaErrorResponse(error);
+    if (known) return known;
     console.error('[API register]', error);
     return fail('Registrasi gagal, coba lagi', 500);
   }

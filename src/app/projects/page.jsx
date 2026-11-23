@@ -68,7 +68,7 @@ export default async function ProjectsPage({ searchParams }) {
                   <th className="px-3 py-3 font-medium">Status</th>
                   <th className="px-3 py-3 font-medium">Diperbarui</th>
                   <th className="px-3 py-3 text-right font-medium">Item</th>
-                  <th className="px-3 py-3 text-right font-medium">Grand total</th>
+                  <th className="px-3 py-3 text-right font-medium">Total akhir</th>
                   <th className="px-5 py-3 text-right font-medium">Aksi</th>
                 </tr>
               </thead>

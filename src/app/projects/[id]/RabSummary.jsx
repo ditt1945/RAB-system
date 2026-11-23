@@ -28,7 +28,7 @@ export default function RabSummary({ summary, itemCount, projectId }) {
         ))}
       </dl>
       <div className="mt-4 rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-4">
-        <p className="text-xs text-cyan-200">Grand total (dibulatkan)</p>
+        <p className="text-xs text-cyan-200">Total akhir (dibulatkan)</p>
         <p className="mt-1 text-2xl font-bold tabular-nums text-cyan-200">{rupiah(summary.grandTotal)}</p>
         <p className="mt-1 text-xs italic text-cyan-100/70">{terbilang(summary.grandTotal)}</p>
       </div>

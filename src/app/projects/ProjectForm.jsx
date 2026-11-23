@@ -46,12 +46,13 @@ export default function ProjectForm({ project }) {
       method: isEdit ? 'PUT' : 'POST',
       body: form,
     });
-    setSaving(false);
     if (!res.ok) {
+      setSaving(false);
       setError(res.error);
       setErrors(res.fields);
       return;
     }
+    // saving dibiarkan true sampai pindah halaman, supaya tombol tidak bisa diklik dua kali
     router.push(`/projects/${isEdit ? project.id : res.data.data.id}`);
     router.refresh();
   };

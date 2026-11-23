@@ -6,10 +6,10 @@
 | Penyusun | Radittya Vitsava Darma, XII RPL 2 |
 | Jenis | Sistem Website (UKK) |
 | Bidang | Konstruksi & Properti |
-| Versi | 2.0 (menggantikan `docs/_old/PRD-v1-2026-11-09.md`) |
-| Tanggal | 20 November 2026 |
+| Versi | 2.1 (v2.0: 20 November 2026; menggantikan `docs/_old/PRD-v1-2026-11-09.md`) |
+| Tanggal | 23 November 2026 |
 | Stack | JavaScript, Next.js 16 (App Router), Prisma 7, MySQL/MariaDB, NextAuth, Gemini API, PDFKit |
-| Dokumen terkait | `docs/FLOWCHART.md`, `docs/AUDIT-2026-11-20.md` |
+| Dokumen terkait | `docs/FLOWCHART.md`, `docs/AUDIT-2026-11-20.md`, `docs/AUDIT-2026-11-23.md` |
 
 ---
 
@@ -49,8 +49,8 @@ Kode **F** dipetakan ke 5 fitur di spesifikasi UKK.
 |---|---|
 | F0.1 | Register: nama, email unik, password minimal 8 karakter (di-hash dengan bcrypt). |
 | F0.2 | Login dengan email + password (NextAuth Credentials, session JWT). Logout. |
-| F0.3 | Halaman `/dashboard`, `/projects/*`, `/ahsp/*`, `/profile`, dan `/company-settings` wajib login (`proxy.ts`). Semua API mengecek session dan mengembalikan 401 jika belum login. |
-| F0.4 | Pengaturan perusahaan (nama, alamat, telepon, email, logo) dipakai sebagai kop PDF. |
+| F0.3 | Halaman `/dashboard`, `/projects/*`, `/ahsp/*`, `/profile`, dan `/company-settings` wajib login (`proxy.js`). Semua API mengecek session dan mengembalikan 401 jika belum login. |
+| F0.4 | Pengaturan perusahaan (nama, alamat, telepon, email, URL logo `https://`) dipakai sebagai kop preview dan PDF. Form kosong sampai diisi pengguna. |
 
 ### F1. Manajemen proyek dan data pekerjaan konstruksi (UKK #1)
 
@@ -59,7 +59,7 @@ Kode **F** dipetakan ke 5 fitur di spesifikasi UKK.
 | F1.1 | CRUD proyek: nama proyek, nama klien, lokasi, deskripsi, tanggal mulai/selesai, status (`planning`, `progress`, `completed`, `cancelled`). |
 | F1.2 | Parameter biaya per proyek: diskon (Rp), biaya jasa/overhead (Rp), margin (%), PPN (%, default 11). |
 | F1.3 | Daftar proyek dengan pencarian nama dan filter status. Hanya proyek milik sendiri yang tampil. |
-| F1.4 | Dashboard: jumlah proyek per status, total nilai RAB, dan 5 proyek terakhir. |
+| F1.4 | Dashboard: jumlah proyek per status (termasuk dibatalkan), total nilai RAB, 5 proyek terakhir, dan panduan "Langkah memulai" untuk pengguna baru. |
 | F1.5 | Menghapus proyek wajib lewat konfirmasi dan ikut menghapus item RAB-nya. |
 
 ### F2. Perhitungan RAB otomatis berdasarkan volume, harga satuan, dan AHSP (UKK #2)
@@ -69,7 +69,7 @@ Kode **F** dipetakan ke 5 fitur di spesifikasi UKK.
 | ID | Kebutuhan |
 |---|---|
 | F2.1 | **Sumber daya**: kode, nama, jenis (`upah`, `bahan`, `alat`), satuan, harga satuan, sumber harga, tanggal berlaku. Contoh: `L.01 Pekerja, OH, Rp120.000`. |
-| F2.2 | **Kategori pekerjaan**: kode, nama, urutan. Contoh: `A Pekerjaan Persiapan`, `B Pekerjaan Tanah`. |
+| F2.2 | **Kategori pekerjaan** (halaman `/ahsp/categories`): kode, nama, urutan. Contoh: `A Pekerjaan Persiapan`, `B Pekerjaan Tanah`. Kategori yang masih dipakai AHSP tidak bisa dihapus. |
 | F2.3 | **Analisa pekerjaan (AHSP)**: kode, nama, satuan, kategori, overhead & profit (%). Contoh: `A.2.3.1.1 Galian 1 m³ tanah biasa`. |
 | F2.4 | **Komponen AHSP**: daftar sumber daya beserta koefisiennya. Contoh: Pekerja 0,750 OH; Mandor 0,025 OH. |
 | F2.5 | Harga satuan pekerjaan (HSP) dihitung otomatis: `HSP = Σ(koefisien × harga sumber daya) × (1 + overhead% / 100)`. Kalau harga sumber daya berubah, HSP ikut berubah. |
@@ -86,7 +86,7 @@ Kode **F** dipetakan ke 5 fitur di spesifikasi UKK.
 | F2.11 | `subtotal = volume × harga satuan`, dihitung **di server**. Nilai subtotal dari client diabaikan. |
 | F2.12 | Item dikelompokkan per kategori pekerjaan dan ditampilkan bersama subtotal per kelompok. |
 
-**Rumus ringkasan RAB** (satu-satunya rumus, di `src/lib/calculations/rab.ts`):
+**Rumus ringkasan RAB** (satu-satunya rumus, di `src/lib/calculations/rab.js`):
 
 ```text
 Jumlah harga pekerjaan = Σ subtotal item
@@ -113,10 +113,11 @@ Semua angka dihitung dengan `decimal.js` dan dibulatkan 2 desimal per langkah.
 | ID | Kebutuhan |
 |---|---|
 | F3.1 | Di halaman proyek, pengguna menulis kebutuhan, misalnya "rumah tipe 36, 1 lantai, pondasi batu kali, dinding bata ringan". |
-| F3.2 | Server mengirim ke Gemini: deskripsi pengguna, data proyek, dan **daftar katalog AHSP** (kode, nama, satuan). Gemini diminta membalas JSON: `[{ ahspCode, perkiraanVolume, alasan }]`, plus `material`/`catatan` untuk pekerjaan di luar katalog. |
+| F3.2 | Server mengirim ke Gemini: deskripsi pengguna, data proyek, dan **daftar katalog AHSP** (kode, nama, satuan). Gemini diminta membalas JSON: `[{ ahspCode, volume, reason }]`, plus `outOfCatalog` untuk pekerjaan/material di luar katalog. Kalau model utama penuh, server otomatis memakai model cadangan (`GEMINI_FALLBACK_MODEL`). Batas 20 permintaan per jam per pengguna. |
 | F3.3 | Server memvalidasi balasan dengan Zod dan mencocokkan `ahspCode` ke database. Harga **selalu** dihitung dari AHSP, bukan dari AI. Saran tanpa kode yang cocok ditandai "di luar katalog" dan harganya kosong. |
-| F3.4 | Pengguna mencentang saran yang mau dipakai dan bisa mengedit volumenya, lalu menekan "Tambahkan ke RAB". Item dibuat lewat F2.8 dan `AiRequest.acceptedAt` diisi. |
-| F3.5 | Riwayat permintaan AI per proyek tersimpan dengan status `processing`, `completed`, atau `failed`. |
+| F3.4 | **Rekomendasi material**: untuk setiap saran, sistem menghitung kebutuhan bahan = koefisien bahan AHSP × volume saran, dijumlahkan per bahan, dan ikut berubah saat volume diedit. |
+| F3.4a | Pengguna mencentang saran yang mau dipakai dan bisa mengedit volumenya, lalu menekan "Tambahkan ke RAB". Item dibuat lewat F2.8 dan `AiRequest.acceptedAt` diisi. Satu permintaan AI hanya bisa dimasukkan sekali. Saran yang pekerjaannya sudah ada di RAB ditandai dan tidak dicentang. |
+| F3.5 | Riwayat 5 permintaan AI terakhir per proyek ditampilkan (status `processing`, `completed`, `failed`) dan bisa dipakai lagi. |
 | F3.6 | Jika `GEMINI_API_KEY` kosong atau API gagal, muncul pesan jelas dalam bahasa Indonesia. Fitur lain tetap berjalan. |
 
 ### F4. Penyimpanan dan pengelolaan data RAB (UKK #4)
@@ -135,7 +136,7 @@ Semua angka dihitung dengan `decimal.js` dan dibulatkan 2 desimal per langkah.
 | F5.1 | Halaman `/projects/[id]/preview` menampilkan RAB dalam format dokumen: kop perusahaan, identitas proyek, tabel (No, Kode AHSP, Uraian Pekerjaan, Volume, Satuan, Harga Satuan, Jumlah) per kelompok dengan subtotal kelompok, rekapitulasi (rumus F2), terbilang, serta tempat & tanggal dan kolom tanda tangan. |
 | F5.2 | Tombol "Export PDF" mengunduh PDF dengan isi **sama persis** dengan preview (A4, nomor halaman, header tabel diulang di setiap halaman). |
 | F5.3 | Nama file: `RAB_<nama-proyek>_<yyyy-mm-dd>.pdf`. |
-| F5.4 | Opsional: lampiran rincian AHSP per item yang dipakai. |
+| F5.4 | Lampiran "Perkiraan kebutuhan material" (koefisien bahan AHSP × volume item) di halaman proyek, preview, dan PDF. Kolom tanda tangan: "Disetujui oleh pemilik/klien" dan "Dibuat oleh". |
 
 ## 5. Kebutuhan Non-Fungsional
 
@@ -183,6 +184,7 @@ Dihapus: `HouseEstimation`, `EstimationAnalytic`, `QuotationRequest`, `ChangeOrd
 | `/projects/[id]/preview` | Preview dokumen RAB dan Export PDF |
 | `/ahsp`, `/ahsp/[id]` | Daftar dan detail AHSP (admin bisa edit) |
 | `/ahsp/resources` | Harga upah, bahan, dan alat (admin bisa edit) |
+| `/ahsp/categories` | Kategori pekerjaan (admin bisa edit) |
 | `/profile`, `/company-settings` | Pengaturan |
 
 | API | Method |
@@ -192,10 +194,11 @@ Dihapus: `HouseEstimation`, `EstimationAnalytic`, `QuotationRequest`, `ChangeOrd
 | `/api/projects/[id]/items`, `/items/[itemId]` | GET, POST / PATCH, DELETE |
 | `/api/projects/[id]/items/reprice` | POST: perbarui harga item dari AHSP |
 | `/api/projects/[id]/summary` | GET |
-| `/api/projects/[id]/ai/recommend`, `/ai/accept` | POST, POST |
+| `/api/projects/[id]/ai/recommend`, `/ai/accept` | GET (riwayat), POST / POST |
 | `/api/projects/[id]/pdf` | GET |
-| `/api/ahsp`, `/api/ahsp/[id]`, `/api/resources`, `/api/resources/[id]` | GET untuk semua pengguna; POST/PATCH/DELETE hanya admin |
-| `/api/profile`, `/api/company-settings` | GET, PUT |
+| `/api/ahsp`, `/api/ahsp/[id]`, `/api/resources`, `/api/resources/[id]`, `/api/ahsp-categories`, `/api/ahsp-categories/[id]` | GET untuk semua pengguna; POST/PUT/DELETE hanya admin |
+| `/api/profile` | GET, PUT (profil), PATCH (ganti kata sandi) |
+| `/api/company-settings` | GET, PUT |
 
 ## 8. Kriteria Penerimaan (skenario uji)
 
@@ -205,8 +208,8 @@ Dihapus: `HouseEstimation`, `EstimationAnalytic`, `QuotationRequest`, `ChangeOrd
 4. Menambah item dari AHSP itu dengan volume 12,5 m³ menghasilkan subtotal **Rp1.299.375**.
 5. Mengubah harga Pekerja tidak mengubah item yang sudah ada sampai tombol "Perbarui harga" ditekan.
 6. Ringkasan dengan subtotal 10.000.000, diskon 500.000, jasa 1.000.000, margin 10%, dan PPN 11% menghasilkan DPP 11.550.000, PPN 1.270.500, Jumlah total 12.820.500, dibulatkan **12.820.000**.
-7. Rekomendasi AI menampilkan saran berkode AHSP; saran yang dicentang masuk ke RAB dengan harga dari AHSP. Tanpa API key, muncul pesan error yang jelas.
-8. Grand total di halaman proyek, preview, dan PDF sama persis.
+7. Rekomendasi AI menampilkan saran berkode AHSP beserta perkiraan kebutuhan material; saran yang dicentang masuk ke RAB dengan harga dari AHSP. Menekan "Tambahkan" dua kali tidak membuat item dobel. Tanpa API key, muncul pesan error yang jelas.
+8. Total akhir di halaman proyek, preview, dan PDF sama persis, dan jumlah semua kelompok sama dengan "Jumlah harga pekerjaan" (volume dibulatkan 3 desimal, harga 2 desimal).
 9. PDF terbuka dan berisi kop perusahaan, tabel per kelompok, rekap, terbilang, dan tanda tangan.
 10. Login sebagai estimator: tombol edit AHSP tidak ada, dan request API edit AHSP dibalas 403.
 
@@ -215,7 +218,7 @@ Dihapus: `HouseEstimation`, `EstimationAnalytic`, `QuotationRequest`, `ChangeOrd
 | Tahap | Isi | Acuan audit |
 |---|---|---|
 | 0 | Commit kondisi sekarang ke git | – |
-| 1 | Perbaikan keamanan: material IDOR, dump SQL, script password, `proxy.ts` | B1–B4 |
+| 1 | Perbaikan keamanan: material IDOR, dump SQL, script password, `proxy.js` | B1–B4 |
 | 2 | Schema AHSP, hapus model di luar lingkup, migration, seed dari data lama | A1, D1, D2, D8 |
 | 3 | Engine kalkulasi (HSP + RAB) beserta unit test; dipakai di semua tempat | C1–C4, E3 |
 | 4 | Halaman master AHSP dan item RAB dari AHSP | A1, F2 |

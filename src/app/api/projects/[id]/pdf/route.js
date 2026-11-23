@@ -1,6 +1,7 @@
 import { fail, parseId, withUser } from '@/lib/api';
 import { loadProjectRab } from '@/lib/rab-data';
 import { generateRabPdfBuffer } from '@/lib/pdf/rabDocument';
+import { fetchLogo } from '@/lib/pdf/logo';
 
 export const runtime = 'nodejs';
 
@@ -11,7 +12,8 @@ export const GET = withUser(async (req, { params }, user) => {
   if (!rab) return fail('Proyek tidak ditemukan', 404);
   if (rab.items.length === 0) return fail('RAB masih kosong, tambahkan item terlebih dahulu', 422);
 
-  const buffer = await generateRabPdfBuffer(rab);
+  const logo = await fetchLogo(rab.company?.logoUrl);
+  const buffer = await generateRabPdfBuffer({ ...rab, logo });
   const slug = rab.project.projectName.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').slice(0, 60) || 'proyek';
   const filename = `RAB_${slug}_${new Date().toISOString().slice(0, 10)}.pdf`;
   const download = new URL(req.url).searchParams.get('download') === '1';
