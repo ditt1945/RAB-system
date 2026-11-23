@@ -1,8 +1,10 @@
+import Link from 'next/link';
+import { ArrowRight, SlidersHorizontal } from 'lucide-react';
 import { angka, rupiah, terbilang } from '@/lib/format';
-import { Card } from '@/components/ui';
+import { buttonClass, Card } from '@/components/ui';
 
-/** Rekapitulasi RAB. Dipakai di halaman susun RAB dan preview. */
-export default function RabSummary({ summary, itemCount }) {
+/** Rekapitulasi RAB di halaman susun RAB. */
+export default function RabSummary({ summary, itemCount, projectId }) {
   const rows = [
     ['Jumlah harga pekerjaan', summary.itemsSubtotal, true],
     summary.discountAmount > 0 && ['Diskon', -summary.discountAmount],
@@ -30,6 +32,19 @@ export default function RabSummary({ summary, itemCount }) {
         <p className="mt-1 text-2xl font-bold tabular-nums text-cyan-200">{rupiah(summary.grandTotal)}</p>
         <p className="mt-1 text-xs italic text-cyan-100/70">{terbilang(summary.grandTotal)}</p>
       </div>
+
+      {projectId && (
+        <div className="mt-4 space-y-2">
+          <Link href={`/projects/${projectId}/edit#biaya`} className={`${buttonClass.secondary} w-full`}>
+            <SlidersHorizontal className="h-4 w-4" /> Ubah diskon, jasa, margin, PPN
+          </Link>
+          {itemCount > 0 && (
+            <Link href={`/projects/${projectId}/preview`} className={`${buttonClass.primary} w-full`}>
+              Lanjut ke preview <ArrowRight className="h-4 w-4" />
+            </Link>
+          )}
+        </div>
+      )}
     </Card>
   );
 }

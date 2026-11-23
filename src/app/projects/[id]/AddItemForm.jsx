@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
 import { api } from '@/lib/client';
 import { calculateRabItemSubtotal } from '@/lib/calculations/rab';
@@ -19,6 +19,13 @@ export default function AddItemForm({ projectId, catalog, groupNames, onAdded })
   const [errors, setErrors] = useState({});
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
+  const volumeRef = useRef(null);
+
+  const choose = (ahsp) => {
+    setSelected(ahsp);
+    setError(null);
+    volumeRef.current?.focus();
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -88,7 +95,7 @@ export default function AddItemForm({ projectId, catalog, groupNames, onAdded })
                     type="button"
                     role="option"
                     aria-selected={selected?.id === a.id}
-                    onClick={() => setSelected(a)}
+                    onClick={() => choose(a)}
                     className={`flex w-full items-start justify-between gap-3 px-3 py-2 text-left text-sm ${
                       selected?.id === a.id ? 'bg-cyan-500/15' : 'hover:bg-slate-800/60'
                     }`}
@@ -118,11 +125,11 @@ export default function AddItemForm({ projectId, catalog, groupNames, onAdded })
                   </p>
                 </>
               ) : (
-                <p className="text-slate-500">Belum ada pekerjaan dipilih</p>
+                <p className="text-slate-500">1. Pilih pekerjaan di daftar. 2. Isi volume. 3. Tambahkan ke RAB.</p>
               )}
             </div>
             <Field label={`Volume${selected ? ` (${selected.unit})` : ''}`} required error={errors.volume}>
-              <input type="number" min={0} step="any" className={inputClass} value={volume} onChange={(e) => setVolume(e.target.value)} />
+              <input ref={volumeRef} type="number" min={0} step="any" className={inputClass} value={volume} onChange={(e) => setVolume(e.target.value)} />
             </Field>
             <Field label="Kelompok" hint={selected ? `Kosongkan = ${selected.categoryName}` : 'Default: kategori AHSP'}>
               <input className={inputClass} value={groupName} onChange={(e) => setGroupName(e.target.value)} list="rab-groups" />

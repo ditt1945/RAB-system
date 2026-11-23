@@ -1,10 +1,15 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import AuthCard from '@/components/AuthCard';
 import RegisterForm from './RegisterForm';
 
 export const metadata = { title: 'Daftar - Sistem RAB Kontraktor' };
 
-export default function RegisterPage() {
+export default async function RegisterPage() {
+  if (await getServerSession(authOptions)) redirect('/dashboard');
+
   return (
     <AuthCard
       title="Buat akun"

@@ -1,20 +1,91 @@
 import Link from 'next/link';
-import { ArrowRight, BarChart3, FileText, Package, ShieldCheck } from 'lucide-react';
-const steps = [
-    { number: '01', title: 'Buat proyek', text: 'Isi nama pekerjaan dan data klien. Semua data tersimpan per akun.', icon: FileText },
-    { number: '02', title: 'Susun RAB', text: 'Tambahkan item, volume, satuan, material, upah, pajak, dan margin.', icon: BarChart3 },
-    { number: '03', title: 'Terbitkan dokumen', text: 'Periksa total, minta rekomendasi AI, lalu export RAB ke PDF.', icon: Package },
+import { redirect } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { ArrowRight, Calculator, FileDown, FolderKanban, Save, Sparkles } from 'lucide-react';
+import { authOptions } from '@/lib/auth';
+import { buttonClass } from '@/components/ui';
+
+const STEPS = [
+  { title: 'Isi data proyek', text: 'Nama pekerjaan, klien, lokasi, dan parameter biaya seperti PPN.' },
+  { title: 'Susun RAB', text: 'Pilih pekerjaan dari katalog AHSP atau minta saran AI, lalu isi volumenya.' },
+  { title: 'Preview & export PDF', text: 'Periksa dokumen RAB lengkap dengan rekap dan terbilang, lalu unduh.' },
 ];
-export default function Home() {
-    return (<main className="min-h-screen bg-[#f5f7fa] text-[#17212b]">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
-        <Link href="/" className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#173b57] text-sm font-black text-white">RK</span><span className="text-lg font-extrabold tracking-tight">Sistem RAB <span className="text-[#e2673d]">Kontraktor</span></span></Link>
-        <div className="flex items-center gap-2 text-sm font-semibold"><Link className="rounded-lg px-3 py-2 text-[#627180] hover:bg-white hover:text-[#173b57]" href="/login">Masuk</Link><Link className="rounded-lg bg-[#e2673d] px-4 py-2.5 text-white shadow-sm shadow-[#e2673d]/20 hover:bg-[#c9512c]" href="/register">Buat akun</Link></div>
+
+const FEATURES = [
+  { icon: FolderKanban, title: 'Manajemen proyek', text: 'Semua proyek dan data pekerjaan tersimpan per akun, bisa dicari dan difilter.' },
+  { icon: Calculator, title: 'Hitung otomatis dari AHSP', text: 'Harga satuan dihitung dari koefisien × harga upah, bahan, dan alat. Jumlah = volume × harga satuan.' },
+  { icon: Sparkles, title: 'Rekomendasi AI', text: 'AI menyarankan pekerjaan dan perkiraan volume dari deskripsi proyek. Harga tetap dari AHSP.' },
+  { icon: Save, title: 'RAB tersimpan rapi', text: 'Item dikelompokkan per jenis pekerjaan, bisa diedit, dihapus, dan diperbarui harganya.' },
+  { icon: FileDown, title: 'Preview & PDF', text: 'Dokumen RAB dengan kop perusahaan, rekap, PPN, terbilang, dan kolom tanda tangan.' },
+];
+
+export default async function Home() {
+  // Sudah login: langsung ke dashboard, tidak perlu lewat halaman depan lagi
+  if (await getServerSession(authOptions)) redirect('/dashboard');
+
+  return (
+    <main className="min-h-screen bg-slate-950 text-slate-100">
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
+        <Link href="/" className="flex items-center gap-2.5">
+          <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#e2673d] text-xs font-black text-white">RK</span>
+          <span className="text-base font-extrabold tracking-tight text-white">
+            Sistem RAB <span className="text-[#e2673d]">Kontraktor</span>
+          </span>
+        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:text-white">
+            Masuk
+          </Link>
+          <Link href="/register" className={buttonClass.primary}>
+            Buat akun
+          </Link>
+        </div>
       </nav>
-      <section className="mx-auto grid max-w-7xl gap-12 px-5 pb-20 pt-12 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:gap-20 lg:pt-20">
-        <div><div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#d9e2e9] bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-[.14em] text-[#557086]"><span className="h-2 w-2 rounded-full bg-emerald-500"/>Workspace kontraktor UMKM</div><h1 className="max-w-2xl text-5xl font-black leading-[1.02] tracking-[-.045em] text-[#173b57] sm:text-7xl">RAB rapi. Keputusan lebih cepat.</h1><p className="mt-6 max-w-xl text-base leading-7 text-[#627180] sm:text-lg">Sistem RAB Kontraktor membantu kontraktor menyusun anggaran dari proyek pertama sampai dokumen siap dikirim. Fokus pada pekerjaan, bukan spreadsheet yang berantakan.</p><div className="mt-8 flex flex-wrap items-center gap-3"><Link className="inline-flex items-center gap-2 rounded-lg bg-[#173b57] px-5 py-3.5 font-bold text-white shadow-lg shadow-[#173b57]/15 hover:bg-[#245778]" href="/register">Mulai susun RAB <ArrowRight className="h-4 w-4"/></Link><Link className="rounded-lg border border-[#ccd8e0] bg-white px-5 py-3.5 font-bold text-[#173b57] hover:border-[#173b57]" href="/login">Saya sudah punya akun</Link></div><div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#71808c]"><span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-emerald-600"/>Data per akun</span><span>Perhitungan server-side</span><span>Export PDF</span></div></div>
-        <div className="rounded-2xl border border-[#dce5eb] bg-white p-4 shadow-[0_20px_70px_rgba(23,59,87,.12)] sm:p-5"><div className="flex items-center justify-between border-b border-[#edf1f4] px-2 pb-4"><div><p className="text-xs font-bold uppercase tracking-[.14em] text-[#82909b]">Alur kerja</p><p className="mt-1 font-bold text-[#173b57]">Proyek baru</p></div><span className="rounded-md bg-[#edf7f2] px-2.5 py-1 text-xs font-bold text-[#27805b]">Draft</span></div><div className="space-y-3 p-2 pt-5">{steps.map(({ number, title, text, icon: Icon }, index) => <div key={number} className={`flex gap-4 rounded-xl p-4 ${index === 0 ? 'bg-[#f1f6fa]' : 'bg-[#fafbfc]'}`}><span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#173b57] text-xs font-black text-white">{number}</span><div><p className="flex items-center gap-2 font-bold text-[#263b4b]"><Icon className="h-4 w-4 text-[#e2673d]"/>{title}</p><p className="mt-1 text-sm leading-6 text-[#71808c]">{text}</p></div></div>)}</div><div className="mt-2 rounded-xl bg-[#173b57] p-4 text-white"><p className="text-xs text-white/60">Langkah berikutnya</p><p className="mt-1 font-bold">Buat akun, lalu mulai proyek pertama.</p></div></div>
+
+      <section className="mx-auto grid max-w-6xl gap-10 px-4 pb-16 pt-10 sm:px-6 lg:grid-cols-[1.1fr_.9fr] lg:items-center lg:pt-16">
+        <div>
+          <p className="text-sm font-medium text-cyan-300">Untuk kontraktor, UMKM, dan estimator</p>
+          <h1 className="mt-3 text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl">
+            Susun RAB proyek konstruksi dari data AHSP, selesai jadi PDF.
+          </h1>
+          <p className="mt-5 max-w-xl text-base leading-7 text-slate-400">
+            Pilih pekerjaan, isi volume, dan sistem menghitung harga satuan, jumlah, PPN, sampai grand total. Tidak perlu rumus spreadsheet.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/register" className={`${buttonClass.primary} px-5 py-3`}>
+              Mulai susun RAB <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link href="/login" className={`${buttonClass.secondary} px-5 py-3`}>
+              Saya sudah punya akun
+            </Link>
+          </div>
+        </div>
+
+        <ol className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
+          <li className="mb-4 list-none text-xs font-medium uppercase tracking-wider text-slate-500">Alur kerja</li>
+          {STEPS.map((step, i) => (
+            <li key={step.title} className="flex gap-4 py-3">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-cyan-500 text-sm font-bold text-slate-950">{i + 1}</span>
+              <div>
+                <p className="font-semibold text-white">{step.title}</p>
+                <p className="mt-0.5 text-sm leading-6 text-slate-400">{step.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
       </section>
-      <section className="border-t border-[#e1e8ed] bg-white"><div className="mx-auto grid max-w-7xl gap-4 px-5 py-12 sm:px-8 md:grid-cols-3">{steps.map(({ number, title, text }) => <article key={number} className="border-l-2 border-[#e2673d] px-5"><p className="text-xs font-black tracking-[.16em] text-[#e2673d]">{number}</p><h2 className="mt-3 text-lg font-extrabold text-[#173b57]">{title}</h2><p className="mt-2 text-sm leading-6 text-[#71808c]">{text}</p></article>)}</div></section>
-    </main>);
+
+      <section className="border-t border-slate-800 bg-slate-900/40">
+        <div className="mx-auto grid max-w-6xl gap-4 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-5">
+          {FEATURES.map(({ icon: Icon, title, text }) => (
+            <article key={title}>
+              <Icon className="h-5 w-5 text-cyan-300" />
+              <h2 className="mt-3 text-sm font-semibold text-white">{title}</h2>
+              <p className="mt-1 text-sm leading-6 text-slate-400">{text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+    </main>
+  );
 }

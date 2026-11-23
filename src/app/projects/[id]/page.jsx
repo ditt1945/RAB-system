@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Eye, FileDown, Pencil } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FileDown, Pencil } from 'lucide-react';
 import { requirePageUser } from '@/lib/auth';
 import { parseId } from '@/lib/api';
 import { loadProjectRab } from '@/lib/rab-data';
 import { listAhsp } from '@/lib/ahsp';
 import { tanggal } from '@/lib/format';
 import AppShell from '@/components/AppShell';
+import ProjectSteps from '@/components/ProjectSteps';
 import { buttonClass, PageHeader, StatusBadge } from '@/components/ui';
 import RabEditor from './RabEditor';
 import RabSummary from './RabSummary';
@@ -21,12 +22,30 @@ export default async function ProjectRabPage({ params }) {
   if (!rab) notFound();
   const catalog = await listAhsp();
   const { project, groups, summary, items } = rab;
+  const isEmpty = items.length === 0;
+
+  const editor = (
+    <RabEditor key="editor" projectId={id} groups={groups} catalog={catalog} hasAhspItems={items.some((i) => i.ahspId)} />
+  );
+  const ai = (
+    <AiPanel
+      key="ai"
+      projectId={id}
+      hasCatalog={catalog.length > 0}
+      defaultPrompt={project.description ?? ''}
+      existingAhspIds={items.filter((i) => i.ahspId).map((i) => String(i.ahspId))}
+      featured={isEmpty}
+    />
+  );
 
   return (
     <AppShell user={user} wide>
-      <Link href="/projects" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white">
-        <ArrowLeft className="h-4 w-4" /> Daftar proyek
-      </Link>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Link href="/projects" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white">
+          <ArrowLeft className="h-4 w-4" /> Daftar proyek
+        </Link>
+        <ProjectSteps current="rab" projectId={id} hasItems={!isEmpty} />
+      </div>
 
       <PageHeader
         title={project.projectName}
@@ -43,25 +62,25 @@ export default async function ProjectRabPage({ params }) {
             <Link href={`/projects/${id}/edit`} className={buttonClass.secondary}>
               <Pencil className="h-4 w-4" /> Edit proyek
             </Link>
-            <Link href={`/projects/${id}/preview`} className={buttonClass.secondary}>
-              <Eye className="h-4 w-4" /> Preview
-            </Link>
-            {items.length > 0 && (
-              <a href={`/api/projects/${id}/pdf?download=1`} className={buttonClass.primary}>
-                <FileDown className="h-4 w-4" /> Export PDF
-              </a>
+            {!isEmpty && (
+              <>
+                <a href={`/api/projects/${id}/pdf?download=1`} className={buttonClass.secondary}>
+                  <FileDown className="h-4 w-4" /> Export PDF
+                </a>
+                <Link href={`/projects/${id}/preview`} className={buttonClass.primary}>
+                  Lanjut ke preview <ArrowRight className="h-4 w-4" />
+                </Link>
+              </>
             )}
           </>
         }
       />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_22rem]">
-        <div className="min-w-0 space-y-6">
-          <RabEditor projectId={id} groups={groups} catalog={catalog} hasAhspItems={items.some((i) => i.ahspId)} />
-          <AiPanel projectId={id} hasCatalog={catalog.length > 0} />
-        </div>
+        {/* RAB kosong: saran AI ditaruh paling atas karena itu cara tercepat untuk mulai */}
+        <div className="min-w-0 space-y-6">{isEmpty ? [ai, editor] : [editor, ai]}</div>
         <div className="xl:sticky xl:top-24 xl:self-start">
-          <RabSummary summary={summary} itemCount={items.length} />
+          <RabSummary summary={summary} itemCount={items.length} projectId={id} />
         </div>
       </div>
     </AppShell>

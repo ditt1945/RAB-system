@@ -92,6 +92,7 @@ export default function ProjectForm({ project }) {
         </div>
       </Card>
 
+      <div id="biaya" className="scroll-mt-24">
       <Card title="Parameter biaya" description="Overhead & keuntungan sudah termasuk di harga AHSP. Isi margin hanya bila perlu tambahan.">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Diskon (Rp)" error={errors.rabDiscount}>
@@ -108,13 +109,14 @@ export default function ProjectForm({ project }) {
           </Field>
         </div>
       </Card>
+      </div>
 
       <div className="flex justify-end gap-2">
         <Link href={isEdit ? `/projects/${project.id}` : '/projects'} className={buttonClass.secondary}>
           Batal
         </Link>
         <button type="submit" disabled={saving} className={buttonClass.primary}>
-          {saving ? 'Menyimpan…' : isEdit ? 'Simpan perubahan' : 'Buat proyek'}
+          {saving ? 'Menyimpan…' : isEdit ? 'Simpan perubahan' : 'Simpan & lanjut susun RAB'}
         </button>
       </div>
     </form>

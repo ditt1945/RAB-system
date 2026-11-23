@@ -1,6 +1,6 @@
 # Flowchart: Sistem RAB Kontraktor
 
-Versi 2.0, 20 November 2026. Mengikuti `docs/PRD.md` v2.0. Versi lama ada di `docs/_old/FLOWCHART-v1.md`.
+Versi 2.1, 23 November 2026 (v2.0: 20 November 2026). Mengikuti `docs/PRD.md` v2.0. Versi lama ada di `docs/_old/FLOWCHART-v1.md`.
 
 Sintaks Mermaid. Bisa dirender di VS Code (extension "Markdown Preview Mermaid Support"), GitHub, atau https://mermaid.live.
 
@@ -16,7 +16,7 @@ flowchart TD
     L --> A{Sudah login?}
     A -->|Belum| AUTH[[Proses Autentikasi - lihat flowchart 2]]
     AUTH --> D
-    A -->|Sudah| D[Dashboard]
+    A -->|Sudah, langsung dialihkan| D[Dashboard + panduan langkah memulai]
 
     D --> M{Pilih menu}
     M -->|Proyek| P[[Kelola Proyek - flowchart 3]]
@@ -24,16 +24,19 @@ flowchart TD
     M -->|Pengaturan| PS[Profil & Data Perusahaan]
     M -->|Logout| OUT([Selesai])
 
-    P --> R[Buka proyek: susun RAB]
-    R --> R1[[Tambah item RAB - flowchart 5]]
-    R --> R2[[Rekomendasi AI - flowchart 6]]
-    R --> R3[[Preview & Export PDF - flowchart 7]]
+    P --> R[Langkah 2: susun RAB]
+    R --> KOSONG{RAB masih kosong?}
+    KOSONG -->|Ya| R2[[Rekomendasi AI ditampilkan paling atas - flowchart 6]]
+    KOSONG -->|Tidak| R1[[Tambah / edit item RAB - flowchart 5]]
     R1 --> R
     R2 --> R
+    R --> R3[[Langkah 3: Preview & Export PDF - flowchart 7]]
     R3 --> D
     H --> D
     PS --> D
 ```
+
+Setiap proyek dikerjakan dalam tiga langkah yang selalu terlihat di atas halaman: **1. Data proyek → 2. Susun RAB → 3. Preview & PDF**. Langkah 3 baru bisa dibuka setelah RAB berisi minimal satu item.
 
 ## 2. Autentikasi (Register, Login, Proteksi Halaman)
 
@@ -79,12 +82,12 @@ flowchart TD
     V -->|Ya| DB1[(Simpan Project, createdBy = user)]
     DB1 --> DT
 
-    A -->|Buka| DT[Halaman detail proyek / penyusunan RAB]
+    A -->|Buka| DT[Langkah 2: halaman penyusunan RAB]
 
     A -->|Edit| F2[/"Ubah data proyek"/]
     F2 --> V2{Valid?}
     V2 -->|Tidak| F2
-    V2 -->|Ya| DB2[(Update Project)] --> HIT[Hitung ulang ringkasan RAB] --> LS
+    V2 -->|Ya| DB2[(Update Project)] --> HIT[Hitung ulang ringkasan RAB] --> DT
 
     A -->|Hapus| K{Konfirmasi hapus?}
     K -->|Batal| LS
@@ -165,7 +168,8 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    S([Mulai]) --> IN[/"Input deskripsi kebutuhan proyek"/]
+    S([Mulai]) --> PRE[Isi awal deskripsi = keterangan proyek]
+    PRE --> IN[/"Input / lengkapi deskripsi kebutuhan proyek"/]
     IN --> V{Minimal 8 karakter?}
     V -->|Tidak| IN
     V -->|Ya| KEY{GEMINI_API_KEY ada?}
@@ -179,7 +183,8 @@ flowchart TD
     OK -->|Ya| MATCH[Cocokkan ahspCode ke database]
     MATCH --> PR[Hitung harga dari AHSP, bukan dari AI<br/>Saran tanpa kode = di luar katalog]
     PR --> DONE[(Update AiRequest status completed)]
-    DONE --> SHOW[/"Tampilkan daftar saran + checkbox<br/>+ volume bisa diedit"/]
+    DONE --> DUP[Saran yang pekerjaannya sudah ada di RAB<br/>ditandai dan tidak dicentang]
+    DUP --> SHOW[/"Tampilkan daftar saran + checkbox<br/>+ volume bisa diedit + total yang dipilih"/]
     SHOW --> PIL{User pilih saran?}
     PIL -->|Tidak ada| X
     PIL -->|Ya| ADD[Buat RabItem untuk setiap saran terpilih<br/>lewat alur flowchart 5]
@@ -197,7 +202,10 @@ flowchart TD
     ITEM -->|Tidak| KOS[Pesan: RAB masih kosong] --> X
     ITEM -->|Ya| AMB[(Ambil Project, RabItem,<br/>CompanySettings)]
     AMB --> HIT[Hitung ringkasan dengan fungsi yang sama<br/>dengan halaman proyek]
-    HIT --> PV[/"Halaman Preview: kop, identitas proyek,<br/>tabel per kelompok, rekap, terbilang, tanda tangan"/]
+    HIT --> KOP{Data perusahaan sudah diisi?}
+    KOP -->|Belum| WARN[Peringatan + tautan ke Data Perusahaan] --> PV
+    KOP -->|Sudah| PV
+    PV[/"Halaman Preview: kop, identitas proyek,<br/>tabel per kelompok, rekap, terbilang, tanda tangan"/]
     PV --> A{Export PDF?}
     A -->|Tidak| X
     A -->|Ya| GEN[Bangun PDF A4 dari data yang sama:<br/>header tabel diulang, nomor halaman]

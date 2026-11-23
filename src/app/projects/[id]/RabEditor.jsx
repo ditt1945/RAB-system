@@ -1,10 +1,11 @@
 'use client';
 
-import { Fragment, useState, useTransition } from 'react';
+import { Fragment, useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, ListPlus, Pencil, RefreshCw, Trash2, X } from 'lucide-react';
 import { api } from '@/lib/client';
 import { angka, rupiah } from '@/lib/format';
+import { calculateRabItemSubtotal } from '@/lib/calculations/rab';
 import { Alert, buttonClass, Card, EmptyState, inputClass } from '@/components/ui';
 import AddItemForm from './AddItemForm';
 
@@ -18,6 +19,13 @@ export default function RabEditor({ projectId, groups, catalog, hasAhspItems }) 
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
   const groupNames = groups.map((g) => g.name);
+
+  // Pesan sukses hilang sendiri supaya tidak menumpuk di atas tabel
+  useEffect(() => {
+    if (!message) return;
+    const timer = setTimeout(() => setMessage(null), 4000);
+    return () => clearTimeout(timer);
+  }, [message]);
 
   const refresh = (msg) => {
     setMessage(msg ?? null);
@@ -57,10 +65,20 @@ export default function RabEditor({ projectId, groups, catalog, hasAhspItems }) 
 
   const editField = (key) => (e) => setEditing((v) => ({ ...v, [key]: e.target.value }));
 
+  // Enter = simpan, Esc = batal saat mengedit baris
+  const editKeys = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveEdit();
+    } else if (e.key === 'Escape') {
+      setEditing(null);
+    }
+  };
+
   return (
     <Card
       title="Rincian pekerjaan"
-      description="Harga satuan item dari AHSP dikunci saat ditambahkan. Gunakan “Perbarui harga” bila harga master berubah."
+      description="Jumlah = volume × harga satuan. Harga dari AHSP dikunci saat item ditambahkan; pakai “Perbarui harga” bila harga master berubah."
       actions={
         <>
           {hasAhspItems && (
@@ -88,7 +106,7 @@ export default function RabEditor({ projectId, groups, catalog, hasAhspItems }) 
         )}
 
         {groups.length === 0 ? (
-          <EmptyState title="RAB masih kosong" description="Tambahkan item dari katalog AHSP, item manual, atau minta saran AI di bawah." />
+          <EmptyState title="RAB masih kosong" description="Minta saran AI di atas, atau pilih pekerjaan dari katalog AHSP / isi item manual lewat form ini." />
         ) : (
           <div className={`-mx-5 overflow-x-auto ${pending ? 'opacity-60' : ''}`}>
             <table className="w-full min-w-[860px] text-sm">
@@ -114,7 +132,7 @@ export default function RabEditor({ projectId, groups, catalog, hasAhspItems }) 
                     </tr>
                     {group.items.map((item, i) =>
                       editing?.id === item.id ? (
-                        <tr key={item.id} className="border-b border-slate-800 bg-cyan-500/5">
+                        <tr key={item.id} className="border-b border-slate-800 bg-cyan-500/5" onKeyDown={editKeys}>
                           <td className="px-3 py-2 text-center text-slate-500">{i + 1}</td>
                           <td className="space-y-2 px-3 py-2">
                             {item.ahspId ? (
@@ -125,7 +143,7 @@ export default function RabEditor({ projectId, groups, catalog, hasAhspItems }) 
                             <input className={inputClass} value={editing.groupName} onChange={editField('groupName')} list="rab-groups" aria-label="Kelompok" placeholder="Kelompok pekerjaan" />
                           </td>
                           <td className="px-3 py-2">
-                            <input type="number" min={0} step="any" className={`${inputClass} text-right`} value={editing.volume} onChange={editField('volume')} aria-label="Volume" />
+                            <input type="number" min={0} step="any" autoFocus className={`${inputClass} text-right`} value={editing.volume} onChange={editField('volume')} aria-label="Volume" />
                           </td>
                           <td className="px-3 py-2 text-center">
                             {item.ahspId ? item.unit : <input className={inputClass} value={editing.unit} onChange={editField('unit')} aria-label="Satuan" />}
@@ -137,13 +155,15 @@ export default function RabEditor({ projectId, groups, catalog, hasAhspItems }) 
                               <input type="number" min={0} className={`${inputClass} text-right`} value={editing.unitPrice} onChange={editField('unitPrice')} aria-label="Harga satuan" />
                             )}
                           </td>
-                          <td className="px-3 py-2 text-right text-slate-400">dihitung server</td>
+                          <td className="px-3 py-2 text-right font-medium tabular-nums text-cyan-200">
+                            {rupiah(calculateRabItemSubtotal(editing.volume || 0, (item.ahspId ? item.unitPrice : editing.unitPrice) || 0))}
+                          </td>
                           <td className="px-3 py-2">
                             <div className="flex justify-end gap-1">
-                              <button type="button" onClick={saveEdit} className={buttonClass.ghost} title="Simpan">
+                              <button type="button" onClick={saveEdit} className={buttonClass.ghost} title="Simpan (Enter)">
                                 <Check className="h-4 w-4 text-emerald-400" />
                               </button>
-                              <button type="button" onClick={() => setEditing(null)} className={buttonClass.ghost} title="Batal">
+                              <button type="button" onClick={() => setEditing(null)} className={buttonClass.ghost} title="Batal (Esc)">
                                 <X className="h-4 w-4" />
                               </button>
                             </div>

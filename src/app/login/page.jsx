@@ -1,10 +1,15 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import AuthCard from '@/components/AuthCard';
 import LoginForm from './LoginForm';
 
 export const metadata = { title: 'Masuk - Sistem RAB Kontraktor' };
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  if (await getServerSession(authOptions)) redirect('/dashboard');
+
   return (
     <AuthCard
       title="Masuk"

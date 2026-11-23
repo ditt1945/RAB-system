@@ -6,6 +6,7 @@ import { requirePageUser } from '@/lib/auth';
 import { parseId } from '@/lib/api';
 import { loadProjectRab } from '@/lib/rab-data';
 import { angka, rupiah, tanggal, terbilang } from '@/lib/format';
+import ProjectSteps from '@/components/ProjectSteps';
 import { buttonClass } from '@/components/ui';
 import PrintButton from './PrintButton';
 
@@ -46,6 +47,26 @@ export default async function PreviewPage({ params }) {
             </a>
           )}
         </div>
+      </div>
+
+      <div className="mx-auto mb-4 max-w-[210mm] space-y-3 px-4 print:hidden">
+        <ProjectSteps current="preview" projectId={id} hasItems={items.length > 0} light />
+        {!company?.companyName && (
+          <p className="rounded-lg border border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Kop perusahaan belum diisi, jadi dokumen ini tampil tanpa kop.{' '}
+            <Link href="/company-settings" className="font-semibold underline">
+              Lengkapi data perusahaan
+            </Link>
+          </p>
+        )}
+        {items.length === 0 && (
+          <p className="rounded-lg border border-slate-400 bg-white px-4 py-3 text-sm text-slate-700">
+            RAB masih kosong, jadi belum bisa di-export.{' '}
+            <Link href={`/projects/${id}`} className="font-semibold underline">
+              Tambahkan item pekerjaan
+            </Link>
+          </p>
+        )}
       </div>
 
       <article className="mx-auto max-w-[210mm] bg-white px-[12mm] py-[14mm] text-[12px] leading-snug text-slate-900 shadow-lg print:max-w-none print:p-0 print:shadow-none">
