@@ -3,15 +3,18 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { LogIn, ArrowRight } from 'lucide-react';
-export default function LoginForm() {
+import { LogIn, ArrowRight, Zap } from 'lucide-react';
+export default function LoginForm({ demo = null }) {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
+        login(email, password);
+    };
+    const login = async (email, password) => {
         setError(null);
         setLoading(true);
         try {
@@ -55,5 +58,13 @@ export default function LoginForm() {
             <ArrowRight className="w-4 h-4"/>
           </>)}
       </button>
+
+      {demo && (<div className="border-t border-slate-800 pt-4">
+          <button type="button" disabled={loading} onClick={() => login(demo.email, demo.password)} className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20 font-medium text-sm transition disabled:opacity-60 cursor-pointer">
+            <Zap className="w-4 h-4"/>
+            <span>Masuk cepat sebagai {demo.email}</span>
+          </button>
+          <p className="mt-2 text-center text-[11px] text-slate-500">Hanya muncul saat development (npm run dev)</p>
+        </div>)}
     </form>);
 }

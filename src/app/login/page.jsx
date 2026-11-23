@@ -10,6 +10,10 @@ export const metadata = { title: 'Masuk - Sistem RAB Kontraktor' };
 export default async function LoginPage() {
   if (await getServerSession(authOptions)) redirect('/dashboard');
 
+  // Shortcut login untuk development saja. Di production (npm run build/start) tombolnya tidak ada.
+  const { DEMO_LOGIN_EMAIL: email, DEMO_LOGIN_PASSWORD: password } = process.env;
+  const demo = process.env.NODE_ENV === 'development' && email && password ? { email, password } : null;
+
   return (
     <AuthCard
       title="Masuk"
@@ -23,7 +27,7 @@ export default async function LoginPage() {
         </>
       }
     >
-      <LoginForm />
+      <LoginForm demo={demo} />
     </AuthCard>
   );
 }
