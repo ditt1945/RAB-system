@@ -55,7 +55,7 @@ export default async function AhspDetailPage({ params }) {
 
       {ahsp.description && <p className="text-sm text-slate-600">{ahsp.description}</p>}
 
-      <Card title={`Analisa untuk 1 ${ahsp.unit}`} description="Format Permen PUPR No. 1 Tahun 2022">
+      <Card title={`Analisa untuk 1 ${ahsp.unit}`} description="Format Permen PUPR No. 8 Tahun 2023">
         <div className="-m-5 overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="border-b border-slate-200 bg-navy-50 text-xs font-semibold uppercase tracking-wide text-navy-800">

@@ -102,7 +102,7 @@ DIBULATKAN (grand total) = Jumlah total dibulatkan ke bawah per Rp1.000
 
 Sesuai praktik industri konstruksi di Indonesia:
 
-- **Overhead & keuntungan sudah ada di HSP** (AHSP, Permen PUPR No. 1/2022, umumnya 10%, maksimal 15%). Karena itu margin proyek default **0%** dan hanya diisi kalau perlu tambahan.
+- **Overhead & keuntungan sudah ada di HSP** (AHSP, Permen PUPR No. 8/2023, umumnya 10%, maksimal 15%). Karena itu margin proyek default **0%** dan hanya diisi kalau perlu tambahan.
 - **PPN dikenakan pada seluruh nilai kontrak (DPP)**, bukan hanya pada nilai pekerjaan.
 - **PPN jasa konstruksi efektif 11%.** Sejak 2025 tarif umum 12%, tetapi untuk barang/jasa non-mewah DPP-nya 11/12 × harga, sehingga hasilnya tetap 11% dari harga. Nilainya bisa diubah per proyek.
 - **Total dibulatkan ke bawah per Rp1.000**, seperti pada rekapitulasi RAB pada umumnya.
