@@ -22,7 +22,7 @@ export const roundMoney = (value) => money(d(value)).toNumber();
 
 /**
  * Harga satuan pekerjaan (HSP) dari satu AHSP.
- * Format Permen PUPR No. 1/2022:
+ * Format Permen PUPR No. 8/2023 (pengganti No. 1/2022):
  *   A. Upah  = Σ koef × harga upah
  *   B. Bahan = Σ koef × harga bahan
  *   C. Alat  = Σ koef × harga alat
