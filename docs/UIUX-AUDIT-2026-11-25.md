@@ -6,6 +6,17 @@
 > (edit volume di sel, menu ⋯, hapus + Batalkan, panel AI, tambah cepat, kartu di HP, tanpa error konsol).
 > Uji interaksi sempat menemukan bug: angka yang diketik tergabung dengan isi sel lama. Sudah diperbaiki (isi sel terseleksi saat fokus).
 >
+> **Revisi 25 November 2026 (masukan pengguna: "jelek, loading, efek buka, edit pakai popup, rasio aneh di laptop"):**
+> - Layar pengguna 1920×1080 skala 125% (ruang tampil ±1536×730). Lebar konten dulu berganti antar halaman (6xl vs 90rem),
+>   sehingga logo dan menu "melompat". Sekarang: **sidebar kiri tetap** + lebar konten sama di semua halaman, header halaman RAB diringkas.
+> - **Loading**: garis progres di atas saat pindah halaman, kerangka (skeleton) per halaman, efek muncul halus tiap halaman.
+> - **Efek buka/tutup**: popup, panel samping, dialog konfirmasi, dan menu memakai animasi masuk & keluar.
+> - **Edit data lewat popup** (tanpa pindah halaman): proyek baru, ubah data proyek, diskon/jasa/margin/PPN, tambah & edit AHSP,
+>   data perusahaan, pengaturan akun. Halaman `/projects/new`, `/projects/[id]/edit`, `/ahsp/new`, `/ahsp/[id]/edit` tetap ada untuk akses langsung.
+> - Catatan teknis: karena halaman kini dikirim bertahap (streaming) agar tampilan loading muncul, proyek yang tidak ada/bukan milik pengguna
+>   tetap menampilkan halaman "tidak ditemukan" tetapi kode status HTTP-nya 200. API tetap membalas 404, jadi data tetap terlindungi.
+> - Verifikasi: 14 uji popup/animasi di ukuran layar pengguna, 13 uji interaksi, 37 + 22 cek HTTP, 23 unit test, lint, dan build lolos.
+>
 > Belum dikerjakan: **P2** penanda batas halaman A4 di preview (posisi potong halaman cetak tergantung browser, jadi penanda bisa menyesatkan)
 > dan **geser untuk mengurutkan** item (diganti "Ubah detail → kelompok"). Mode gelap opsional juga belum ada.
 

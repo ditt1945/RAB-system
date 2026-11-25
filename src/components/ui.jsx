@@ -21,7 +21,7 @@ export function PageHeader({ title, description, actions, eyebrow }) {
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         {eyebrow && <div className="mb-1">{eyebrow}</div>}
-        <h1 className="text-2xl font-semibold tracking-tight text-navy-900">{title}</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-navy-900 sm:text-[22px]">{title}</h1>
         {description && <div className="mt-1 text-sm text-slate-600">{description}</div>}
       </div>
       {actions && <div className="flex shrink-0 flex-wrap gap-2">{actions}</div>}
@@ -109,12 +109,12 @@ export function EmptyState({ icon: Icon, title, description, action, children })
 /** Kotak angka ringkas (dashboard). */
 export function Stat({ label, value, hint, icon: Icon }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
+    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3.5 shadow-xs">
       <div className="flex items-center justify-between text-[13px] text-slate-600">
         {label}
         {Icon && <Icon className="h-4 w-4 text-slate-400" />}
       </div>
-      <p className="mt-2 text-2xl font-semibold tabular-nums text-navy-900">{value}</p>
+      <p className="mt-1 text-xl font-semibold tabular-nums text-navy-900 sm:text-2xl">{value}</p>
       {hint && <p className="mt-0.5 text-xs text-slate-500">{hint}</p>}
     </div>
   );

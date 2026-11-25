@@ -11,7 +11,8 @@ const STEPS = [
  * Penunjuk langkah pengerjaan satu proyek: Data proyek → Susun RAB → Preview & PDF.
  * Langkah yang belum bisa dibuka (proyek belum disimpan / RAB masih kosong) tampil nonaktif.
  */
-export default function ProjectSteps({ current, projectId, hasItems = false }) {
+/** onDataClick: buka popup data proyek alih-alih pindah ke halaman edit. */
+export default function ProjectSteps({ current, projectId, hasItems = false, onDataClick }) {
   const currentIndex = STEPS.findIndex((s) => s.key === current);
   const href = {
     data: projectId ? `/projects/${projectId}/edit` : null,
@@ -46,6 +47,10 @@ export default function ProjectSteps({ current, projectId, hasItems = false }) {
                 <span aria-current="step" className="flex items-center gap-2 text-navy-900">
                   {body}
                 </span>
+              ) : step.key === 'data' && onDataClick ? (
+                <button type="button" onClick={onDataClick} className="flex items-center gap-2 text-slate-600 transition hover:text-navy-900">
+                  {body}
+                </button>
               ) : link ? (
                 <Link href={link} className="flex items-center gap-2 text-slate-600 transition hover:text-navy-900">
                   {body}

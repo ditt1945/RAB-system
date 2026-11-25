@@ -21,7 +21,7 @@ flowchart TD
     D --> M{Pilih menu}
     M -->|Proyek| P[[Kelola Proyek - flowchart 3]]
     M -->|Master AHSP| H[[Kelola AHSP - flowchart 4]]
-    M -->|Menu akun / avatar| PS[Data perusahaan & pengaturan akun]
+    M -->|Menu akun di sidebar| PS[Popup data perusahaan / pengaturan akun]
     M -->|Logout| OUT([Selesai])
 
     P --> R[Langkah 2: susun RAB]

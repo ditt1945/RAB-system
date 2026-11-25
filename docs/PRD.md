@@ -148,7 +148,7 @@ Semua angka dihitung dengan `decimal.js` dan dibulatkan 2 desimal per langkah.
 | Akurasi | Semua uang memakai `decimal.js` dan kolom DB `DECIMAL`, tanpa float. Angka di layar, preview, dan PDF identik. |
 | Keamanan | bcrypt; session NextAuth; cek kepemilikan di setiap query (`createdBy`); validasi Zod di setiap API; tidak ada secret di repo; tidak ada dump DB berisi user di repo. |
 | Pesan error | Bahasa Indonesia. API mengembalikan 401, 404, atau 422 (dengan detail per field), dan 500 hanya untuk error tak terduga. |
-| Tampilan | Tema terang "kertas kerja" dengan satu aksen oranye + navy. Responsif minimal 390 px: di HP item RAB tampil sebagai kartu, total selalu terlihat di bar bawah, dan menu utama di bar navigasi bawah. Input rupiah berformat "Rp 10.000.000". Konfirmasi memakai dialog sendiri, notifikasi memakai toast. |
+| Tampilan | Tema terang "kertas kerja" dengan satu aksen oranye + navy. Laptop: sidebar kiri tetap dan lebar konten sama di semua halaman. HP: item RAB tampil sebagai kartu, total selalu terlihat di bar bawah, menu utama di bar navigasi bawah. Edit data (proyek, biaya, AHSP, perusahaan, akun) lewat popup tanpa pindah halaman. Loading: garis progres + kerangka halaman; popup, panel, dan menu beranimasi saat dibuka/ditutup. Input rupiah berformat "Rp 10.000.000". Konfirmasi memakai dialog sendiri, notifikasi memakai toast. |
 | Pengujian | Unit test (Vitest) untuk rumus HSP, rumus RAB, urutan pajak, dan cek kepemilikan. Uji manual mengikuti skenario §8. |
 | Instalasi | `npm install` → isi `.env` → `npx prisma migrate deploy` → `npx prisma db seed` → `npm run dev`. |
 

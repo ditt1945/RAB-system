@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { getServerSession } from 'next-auth';
 import { notFound, redirect } from 'next/navigation';
 import CredentialsProvider from 'next-auth/providers/credentials';
@@ -73,7 +74,8 @@ export const authOptions = {
  * Role dibaca ulang dari database supaya perubahan role langsung berlaku.
  * @returns {Promise<{ id: bigint, name: string, email: string, role: 'admin'|'estimator', isAdmin: boolean } | null>}
  */
-export async function getCurrentUser() {
+// cache(): dalam satu request (layout + halaman) database cukup dibaca sekali
+export const getCurrentUser = cache(async function getCurrentUser() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return null;
 
@@ -85,7 +87,7 @@ export async function getCurrentUser() {
 
   const role = user.profileSettings?.role ?? 'estimator';
   return { id: user.id, name: user.name, email: user.email, role, isAdmin: role === 'admin' };
-}
+});
 
 /** Untuk server component halaman: wajib login, kalau tidak → /login. */
 export async function requirePageUser({ admin = false } = {}) {

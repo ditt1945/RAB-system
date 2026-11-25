@@ -1,0 +1,17 @@
+import { requirePageUser } from '@/lib/auth';
+import ProjectSteps from '@/components/ProjectSteps';
+import { PageHeader } from '@/components/ui';
+import ProjectForm from '../ProjectForm';
+
+export const metadata = { title: 'Proyek Baru - Sistem RAB Kontraktor' };
+
+export default async function NewProjectPage() {
+  const user = await requirePageUser();
+  return (
+    <>
+      <ProjectSteps current="data" />
+      <PageHeader title="Proyek baru" description="Isi data utama dulu. Setelah disimpan, Anda langsung masuk ke penyusunan RAB." />
+      <ProjectForm />
+    </>
+  );
+}
