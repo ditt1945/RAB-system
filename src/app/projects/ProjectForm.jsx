@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { ChevronDown } from 'lucide-react';
 import { api } from '@/lib/client';
 import { STATUS_LABEL } from '@/lib/format';
 import { Alert, buttonClass, Card, Field, inputClass } from '@/components/ui';
+import { DateInput, MoneyInput, SuffixInput } from '@/components/inputs';
 
 const EMPTY = {
   projectName: '',
@@ -15,10 +17,12 @@ const EMPTY = {
   startDate: '',
   endDate: '',
   status: 'planning',
-  rabDiscount: 0,
-  rabServiceFee: 0,
-  targetMarginPercent: 0,
-  rabTaxPercent: 11,
+  rabNumber: '',
+  approvedBy: '',
+  rabDiscount: '0',
+  rabServiceFee: '0',
+  targetMarginPercent: '0',
+  rabTaxPercent: '11',
 };
 
 const toDateInput = (value) => (value ? String(value).slice(0, 10) : '');
@@ -29,7 +33,7 @@ export default function ProjectForm({ project }) {
   const isEdit = Boolean(project);
   const [form, setForm] = useState(() =>
     project
-      ? Object.fromEntries(Object.keys(EMPTY).map((key) => [key, key.endsWith('Date') ? toDateInput(project[key]) : (project[key] ?? '')]))
+      ? Object.fromEntries(Object.keys(EMPTY).map((key) => [key, key.endsWith('Date') ? toDateInput(project[key]) : String(project[key] ?? '')]))
       : EMPTY,
   );
   const [errors, setErrors] = useState({});
@@ -37,6 +41,8 @@ export default function ProjectForm({ project }) {
   const [saving, setSaving] = useState(false);
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+  const setValue = (key) => (value) => setForm((f) => ({ ...f, [key]: value }));
+  const costErrors = ['rabDiscount', 'rabServiceFee', 'targetMarginPercent', 'rabTaxPercent'].some((k) => errors[k]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -58,13 +64,13 @@ export default function ProjectForm({ project }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+    <form onSubmit={handleSubmit} className="max-w-3xl space-y-6" noValidate>
       <Alert>{error}</Alert>
 
       <Card title="Data proyek">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Nama proyek" required error={errors.projectName} className="sm:col-span-2">
-            <input className={inputClass} value={form.projectName} onChange={set('projectName')} placeholder="Rumah Tinggal 2 Lantai" />
+            <input className={inputClass} value={form.projectName} onChange={set('projectName')} placeholder="Rumah Tinggal 2 Lantai" autoFocus={!isEdit} />
           </Field>
           <Field label="Pemilik / klien" required error={errors.clientName}>
             <input className={inputClass} value={form.clientName} onChange={set('clientName')} placeholder="Bpk. Ahmad" />
@@ -73,10 +79,10 @@ export default function ProjectForm({ project }) {
             <input className={inputClass} value={form.location} onChange={set('location')} placeholder="Kota / kabupaten" />
           </Field>
           <Field label="Tanggal mulai" error={errors.startDate}>
-            <input type="date" className={inputClass} value={form.startDate} onChange={set('startDate')} />
+            <DateInput value={form.startDate} onChange={set('startDate')} />
           </Field>
           <Field label="Tanggal selesai" error={errors.endDate}>
-            <input type="date" className={inputClass} value={form.endDate} onChange={set('endDate')} />
+            <DateInput value={form.endDate} onChange={set('endDate')} />
           </Field>
           <Field label="Status" error={errors.status}>
             <select className={inputClass} value={form.status} onChange={set('status')}>
@@ -87,32 +93,54 @@ export default function ProjectForm({ project }) {
               ))}
             </select>
           </Field>
-          <Field label="Keterangan" error={errors.description} className="sm:col-span-2">
-            <textarea rows={3} className={inputClass} value={form.description} onChange={set('description')} placeholder="Spesifikasi umum, luas bangunan, dll. Dipakai juga sebagai konteks AI." />
+          <Field label="Keterangan" error={errors.description} hint="Spesifikasi umum, luas bangunan, dll. Bisa dipakai sebagai deskripsi untuk saran AI." className="sm:col-span-2">
+            <textarea rows={3} className={inputClass} value={form.description} onChange={set('description')} placeholder="Rumah 1 lantai 6×6 m, pondasi batu kali, dinding bata merah…" />
           </Field>
         </div>
       </Card>
 
-      <div id="biaya" className="scroll-mt-24">
-      <Card title="Parameter biaya" description="Overhead & keuntungan sudah termasuk di harga AHSP. Isi margin hanya bila perlu tambahan.">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Field label="Diskon (Rp)" error={errors.rabDiscount}>
-            <input type="number" min={0} className={inputClass} value={form.rabDiscount} onChange={set('rabDiscount')} />
+      <Card title="Dokumen RAB" description="Opsional. Dicetak di kop dan kolom tanda tangan preview/PDF.">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Nomor RAB" error={errors.rabNumber}>
+            <input className={inputClass} value={form.rabNumber} onChange={set('rabNumber')} placeholder="RAB/001/XI/2026" />
           </Field>
-          <Field label="Biaya jasa (Rp)" error={errors.rabServiceFee}>
-            <input type="number" min={0} className={inputClass} value={form.rabServiceFee} onChange={set('rabServiceFee')} />
-          </Field>
-          <Field label="Margin tambahan (%)" error={errors.targetMarginPercent}>
-            <input type="number" min={0} max={100} step={0.5} className={inputClass} value={form.targetMarginPercent} onChange={set('targetMarginPercent')} />
-          </Field>
-          <Field label="PPN (%)" error={errors.rabTaxPercent} hint="Jasa konstruksi: 11%">
-            <input type="number" min={0} max={100} step={0.5} className={inputClass} value={form.rabTaxPercent} onChange={set('rabTaxPercent')} />
+          <Field label="Disetujui oleh" error={errors.approvedBy} hint="Kosongkan = nama pemilik/klien">
+            <input className={inputClass} value={form.approvedBy} onChange={set('approvedBy')} placeholder={form.clientName || 'Nama penyetuju'} />
           </Field>
         </div>
       </Card>
-      </div>
 
-      <div className="flex justify-end gap-2">
+      <details id="biaya" open={isEdit || costErrors} className="group scroll-mt-24 rounded-xl border border-slate-200 bg-white shadow-xs">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4">
+          <span>
+            <span className="block text-base font-semibold text-navy-900">Pengaturan biaya</span>
+            <span className="block text-[13px] text-slate-600">
+              Diskon Rp{Number(form.rabDiscount || 0).toLocaleString('id-ID')} · jasa Rp{Number(form.rabServiceFee || 0).toLocaleString('id-ID')} · margin{' '}
+              {form.targetMarginPercent || 0}% · PPN {form.rabTaxPercent || 0}%
+            </span>
+          </span>
+          <ChevronDown className="h-5 w-5 shrink-0 text-slate-500 transition group-open:rotate-180" />
+        </summary>
+        <div className="border-t border-slate-200 p-5">
+          <p className="mb-4 text-[13px] text-slate-600">Overhead & keuntungan sudah termasuk di harga AHSP. Isi margin hanya bila perlu tambahan.</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Diskon" error={errors.rabDiscount}>
+              <MoneyInput value={form.rabDiscount} onChange={setValue('rabDiscount')} />
+            </Field>
+            <Field label="Biaya jasa" error={errors.rabServiceFee}>
+              <MoneyInput value={form.rabServiceFee} onChange={setValue('rabServiceFee')} />
+            </Field>
+            <Field label="Margin tambahan" error={errors.targetMarginPercent}>
+              <SuffixInput suffix="%" min={0} max={100} value={form.targetMarginPercent} onChange={set('targetMarginPercent')} />
+            </Field>
+            <Field label="PPN" error={errors.rabTaxPercent} hint="Jasa konstruksi umumnya 11%">
+              <SuffixInput suffix="%" min={0} max={100} value={form.rabTaxPercent} onChange={set('rabTaxPercent')} />
+            </Field>
+          </div>
+        </div>
+      </details>
+
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Link href={isEdit ? `/projects/${project.id}` : '/projects'} className={buttonClass.secondary}>
           Batal
         </Link>

@@ -1,6 +1,6 @@
 # Flowchart: Sistem RAB Kontraktor
 
-Versi 2.2, 23 November 2026 (v2.0: 20 November 2026). Mengikuti `docs/PRD.md` v2.0. Versi lama ada di `docs/_old/FLOWCHART-v1.md`.
+Versi 2.3, 25 November 2026 (v2.0: 20 November 2026). Mengikuti `docs/PRD.md` v2.0. Versi lama ada di `docs/_old/FLOWCHART-v1.md`.
 
 Sintaks Mermaid. Bisa dirender di VS Code (extension "Markdown Preview Mermaid Support"), GitHub, atau https://mermaid.live.
 
@@ -21,12 +21,15 @@ flowchart TD
     D --> M{Pilih menu}
     M -->|Proyek| P[[Kelola Proyek - flowchart 3]]
     M -->|Master AHSP| H[[Kelola AHSP - flowchart 4]]
-    M -->|Pengaturan| PS[Profil & Data Perusahaan]
+    M -->|Menu akun / avatar| PS[Data perusahaan & pengaturan akun]
     M -->|Logout| OUT([Selesai])
 
     P --> R[Langkah 2: susun RAB]
     R --> KOSONG{RAB masih kosong?}
-    KOSONG -->|Ya| R2[[Rekomendasi AI ditampilkan paling atas - flowchart 6]]
+    KOSONG -->|Ya| MULAI{Pilih cara mulai}
+    MULAI -->|Template| TPL[Tambah pekerjaan dari template<br/>rumah tipe 36/45, renovasi] --> R
+    MULAI -->|Saran AI| R2[[Panel saran AI - flowchart 6]]
+    MULAI -->|Katalog| R1
     KOSONG -->|Tidak| R1[[Tambah / edit item RAB - flowchart 5]]
     R1 --> R
     R2 --> R
@@ -156,10 +159,11 @@ flowchart TD
 
     RK --> T[/"Tampilkan tabel per kelompok + ringkasan"/]
     T --> A{Aksi lanjutan?}
-    A -->|Edit item| VOL
-    A -->|Hapus item| K{Konfirmasi?}
-    K -->|Ya| DEL[(Hapus RabItem)] --> RK
-    K -->|Tidak| T
+    A -->|Ketik volume di sel / Ubah detail| VOL
+    A -->|Hapus item| HIDE[Sembunyikan item + toast Batalkan 5 detik]
+    HIDE --> K{Batalkan ditekan?}
+    K -->|Tidak| DEL[(Hapus RabItem)] --> RK
+    K -->|Ya| T
     A -->|Perbarui harga dari AHSP| RP[Hitung ulang HSP terkini<br/>untuk item ber-AHSP] --> DB
     A -->|Selesai| X([Selesai])
 ```
@@ -211,7 +215,10 @@ flowchart TD
     KOP -->|Belum| WARN[Peringatan + tautan ke Data Perusahaan] --> PV
     KOP -->|Sudah| PV
     PV[/"Halaman Preview: kop + logo, identitas proyek,<br/>tabel per kelompok, rekap, terbilang, tanda tangan klien & pembuat,<br/>lampiran kebutuhan material"/]
-    PV --> A{Export PDF?}
+    PV --> VER{Versi dokumen?}
+    VER -->|Untuk klien| PVK[RAB + rekap saja] --> A
+    VER -->|Internal| PVI[+ lampiran material & komposisi biaya] --> A
+    A{Export PDF?}
     A -->|Tidak| X
     A -->|Ya| GEN[Bangun PDF A4 dari data yang sama:<br/>header tabel diulang, nomor halaman]
     GEN --> DL[/"Unduh RAB_nama-proyek_tanggal.pdf"/]

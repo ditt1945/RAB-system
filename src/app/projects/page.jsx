@@ -1,12 +1,12 @@
 import Link from 'next/link';
-import { FolderKanban, PlusCircle, Search } from 'lucide-react';
+import { ChevronRight, FolderKanban, PlusCircle, Search } from 'lucide-react';
 import { requirePageUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { calculateProjectSummary } from '@/lib/calculations/rab';
-import { rupiah, STATUS_LABEL, tanggal } from '@/lib/format';
+import { rupiah, STATUS_LABEL, tanggalPendek, waktuRelatif } from '@/lib/format';
 import AppShell from '@/components/AppShell';
+import FilterForm from '@/components/FilterForm';
 import { buttonClass, Card, EmptyState, inputClass, PageHeader, StatusBadge } from '@/components/ui';
-import DeleteProjectButton from './DeleteProjectButton';
 
 export const metadata = { title: 'Daftar Proyek - Sistem RAB Kontraktor' };
 
@@ -23,12 +23,14 @@ export default async function ProjectsPage({ searchParams }) {
     orderBy: { updatedAt: 'desc' },
     include: { rabItems: { select: { volume: true, unitPrice: true } } },
   });
+  const rows = projects.map((p) => ({ ...p, id: p.id.toString(), grandTotal: calculateProjectSummary({ ...p, items: p.rabItems }).grandTotal }));
+  const filtered = Boolean(q || status);
 
   return (
     <AppShell user={user}>
       <PageHeader
-        title="Daftar Proyek"
-        description="Proyek konstruksi milik Anda beserta nilai RAB-nya."
+        title="Proyek"
+        description="Semua proyek konstruksi milik Anda beserta nilai RAB-nya."
         actions={
           <Link href="/projects/new" className={buttonClass.primary}>
             <PlusCircle className="h-4 w-4" /> Proyek baru
@@ -36,9 +38,9 @@ export default async function ProjectsPage({ searchParams }) {
         }
       />
 
-      <form className="flex flex-col gap-2 sm:flex-row" role="search">
+      <FilterForm className="flex flex-col gap-2 sm:flex-row">
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+          <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <input name="q" defaultValue={q} placeholder="Cari nama proyek atau klien…" className={`${inputClass} pl-9`} aria-label="Cari proyek" />
         </div>
         <select name="status" defaultValue={status} className={`${inputClass} sm:w-48`} aria-label="Filter status">
@@ -49,39 +51,45 @@ export default async function ProjectsPage({ searchParams }) {
             </option>
           ))}
         </select>
-        <button className={buttonClass.secondary}>Terapkan</button>
-      </form>
+      </FilterForm>
 
-      <Card>
-        {projects.length === 0 ? (
+      <Card bodyClassName="p-0">
+        {rows.length === 0 ? (
           <EmptyState
             icon={FolderKanban}
-            title={q || status ? 'Tidak ada proyek yang cocok' : 'Belum ada proyek'}
-            description={q || status ? 'Coba ubah kata kunci atau filter.' : 'Mulai dengan membuat proyek baru.'}
+            title={filtered ? 'Tidak ada proyek yang cocok' : 'Belum ada proyek'}
+            description={filtered ? 'Coba ubah kata kunci atau status.' : 'Mulai dengan membuat proyek baru.'}
+            action={
+              !filtered && (
+                <Link href="/projects/new" className={buttonClass.primary}>
+                  <PlusCircle className="h-4 w-4" /> Buat proyek
+                </Link>
+              )
+            }
           />
         ) : (
-          <div className="-m-5 overflow-x-auto">
-            <table className="w-full min-w-[720px] text-sm">
-              <thead className="border-b border-slate-800 text-left text-xs text-slate-400">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Proyek</th>
-                  <th className="px-3 py-3 font-medium">Status</th>
-                  <th className="px-3 py-3 font-medium">Diperbarui</th>
-                  <th className="px-3 py-3 text-right font-medium">Item</th>
-                  <th className="px-3 py-3 text-right font-medium">Total akhir</th>
-                  <th className="px-5 py-3 text-right font-medium">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800">
-                {projects.map((p) => {
-                  const { grandTotal } = calculateProjectSummary({ ...p, items: p.rabItems });
-                  return (
-                    <tr key={p.id.toString()} className="hover:bg-slate-800/30">
+          <>
+            {/* Laptop: tabel, seluruh baris bisa diklik */}
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-navy-50 text-left text-xs font-semibold uppercase tracking-wide text-navy-800">
+                    <th className="px-5 py-2.5">Proyek</th>
+                    <th className="px-3 py-2.5">Status</th>
+                    <th className="px-3 py-2.5">Diubah</th>
+                    <th className="px-3 py-2.5 text-right">Item</th>
+                    <th className="px-3 py-2.5 text-right">Total akhir</th>
+                    <th className="px-5 py-2.5" aria-label="Aksi" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {rows.map((p) => (
+                    <tr key={p.id} className="group relative hover:bg-brand-50/40">
                       <td className="px-5 py-3">
-                        <Link href={`/projects/${p.id}`} className="font-medium text-white hover:text-cyan-300">
+                        <Link href={`/projects/${p.id}`} className="font-medium text-slate-900 after:absolute after:inset-0 group-hover:text-brand-700">
                           {p.projectName}
                         </Link>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-[13px] text-slate-600">
                           {p.clientName}
                           {p.location ? ` · ${p.location}` : ''}
                         </p>
@@ -89,28 +97,46 @@ export default async function ProjectsPage({ searchParams }) {
                       <td className="px-3 py-3">
                         <StatusBadge status={p.status} />
                       </td>
-                      <td className="px-3 py-3 text-slate-400">{tanggal(p.updatedAt)}</td>
-                      <td className="px-3 py-3 text-right text-slate-300">{p.rabItems.length}</td>
-                      <td className="px-3 py-3 text-right font-semibold text-white">{rupiah(grandTotal)}</td>
-                      <td className="px-5 py-3">
-                        <div className="flex justify-end gap-1">
-                          <Link href={`/projects/${p.id}`} className="rounded-md px-2 py-1 text-xs text-cyan-300 hover:bg-slate-800">
-                            Susun RAB
-                          </Link>
-                          <Link href={`/projects/${p.id}/edit`} className="rounded-md px-2 py-1 text-xs text-slate-300 hover:bg-slate-800">
-                            Edit
-                          </Link>
-                          <DeleteProjectButton id={p.id.toString()} name={p.projectName} />
-                        </div>
+                      <td className="px-3 py-3 text-slate-600" title={tanggalPendek(p.updatedAt)}>
+                        {waktuRelatif(p.updatedAt)}
+                      </td>
+                      <td className="px-3 py-3 text-right tabular-nums text-slate-700">{p.rabItems.length}</td>
+                      <td className="px-3 py-3 text-right font-semibold tabular-nums text-navy-900">{rupiah(p.grandTotal)}</td>
+                      <td className="relative z-10 px-5 py-3 text-right">
+                        <Link href={`/projects/${p.id}/edit`} className="rounded px-2 py-1 text-[13px] font-medium text-slate-600 hover:bg-slate-100 hover:text-navy-900">
+                          Ubah data
+                        </Link>
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* HP: kartu */}
+            <ul className="divide-y divide-slate-100 md:hidden">
+              {rows.map((p) => (
+                <li key={p.id}>
+                  <Link href={`/projects/${p.id}`} className="flex items-center gap-3 px-4 py-3.5 active:bg-slate-50">
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium text-slate-900">{p.projectName}</span>
+                      <span className="mt-0.5 block truncate text-[13px] text-slate-600">
+                        {p.clientName} · {waktuRelatif(p.updatedAt)}
+                      </span>
+                      <span className="mt-1.5 flex items-center justify-between gap-2">
+                        <StatusBadge status={p.status} />
+                        <span className="text-sm font-semibold tabular-nums text-navy-900">{rupiah(p.grandTotal)}</span>
+                      </span>
+                    </span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </Card>
+      {rows.length > 0 && <p className="text-xs text-slate-500">{rows.length} proyek. Total akhir sudah termasuk PPN dan dibulatkan.</p>}
     </AppShell>
   );
 }

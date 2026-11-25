@@ -11,15 +11,17 @@ Aplikasi web untuk merencanakan dan menghitung **Rencana Anggaran Biaya (RAB)** 
 | Database | MySQL / MariaDB (Prisma ORM) |
 | Target pengguna | UMKM / Pengusaha, Karyawan / Perusahaan |
 
-Dokumen: [PRD](docs/PRD.md) · [Flowchart](docs/FLOWCHART.md) · [Audit 20 Nov](docs/AUDIT-2026-11-20.md) · [Audit 23 Nov](docs/AUDIT-2026-11-23.md)
+Dokumen: [PRD](docs/PRD.md) · [Flowchart](docs/FLOWCHART.md) · [Audit 20 Nov](docs/AUDIT-2026-11-20.md) · [Audit 23 Nov](docs/AUDIT-2026-11-23.md) · [Audit UI/UX 25 Nov](docs/UIUX-AUDIT-2026-11-25.md)
 
 ## Fitur (sesuai spesifikasi UKK)
 
 1. **Manajemen proyek dan data pekerjaan**: CRUD proyek, pencarian, filter status, dashboard dengan panduan langkah memulai. Alur proyek: Data proyek → Susun RAB → Preview & PDF.
 2. **Perhitungan RAB otomatis**: harga satuan dihitung dari AHSP (koefisien × harga upah/bahan/alat + overhead), subtotal = volume × harga satuan, rekap dengan PPN 11% dan pembulatan.
 3. **Rekomendasi AI pekerjaan dan material (Gemini)**: AI memilih pekerjaan dari katalog AHSP dan memperkirakan volume; sistem menghitung kebutuhan material dari koefisien bahan AHSP × volume. Harga tetap dari AHSP. Ada model cadangan kalau model utama penuh.
-4. **Penyimpanan dan pengelolaan RAB**: tambah item dari AHSP atau manual, edit, hapus, kelompok pekerjaan, perbarui harga, perkiraan kebutuhan material.
-5. **Preview dan export PDF**: dokumen RAB dengan kop + logo perusahaan, tabel per kelompok, rekapitulasi, terbilang, tanda tangan klien dan pembuat, serta lampiran kebutuhan material.
+4. **Penyimpanan dan pengelolaan RAB**: mulai dari template / saran AI / katalog, tambah cepat dari katalog, volume diketik langsung di tabel, hapus dengan Batalkan, kelompok pekerjaan, perbarui harga, komposisi biaya, dan perkiraan kebutuhan material.
+5. **Preview dan export PDF**: dokumen RAB dengan kop + logo perusahaan, nomor RAB, tabel per kelompok, rekapitulasi, terbilang, tanda tangan klien dan pembuat. Dua versi: untuk klien, dan internal (dengan lampiran material & komposisi biaya).
+
+Tampilan: tema terang, responsif sampai HP (kartu item, bar total, navigasi bawah).
 
 Peran: **admin** (mengelola master AHSP, kategori, dan harga) dan **estimator** (menyusun RAB, hanya bisa melihat master AHSP).
 

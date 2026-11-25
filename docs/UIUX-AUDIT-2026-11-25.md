@@ -1,5 +1,14 @@
 # Audit UI/UX dan Rencana Rombak Tampilan
 
+> **Status 25 November 2026: rombak selesai** dengan tema terang (keputusan pengguna), di branch `bangil`.
+> Dikerjakan: semua P0 (R1–R10, V1–V4), P1 (F1–F5, N1–N3, D1–D3), dan P2 (P1, P3, P4, P6; P5 sebagian lewat "Duplikat" dan "Ubah detail → kelompok").
+> Verifikasi: lint bersih, 23 unit test, build production, 36 + 22 cek HTTP, dan 13 uji interaksi di browser headless
+> (edit volume di sel, menu ⋯, hapus + Batalkan, panel AI, tambah cepat, kartu di HP, tanpa error konsol).
+> Uji interaksi sempat menemukan bug: angka yang diketik tergabung dengan isi sel lama. Sudah diperbaiki (isi sel terseleksi saat fokus).
+>
+> Belum dikerjakan: **P2** penanda batas halaman A4 di preview (posisi potong halaman cetak tergantung browser, jadi penanda bisa menyesatkan)
+> dan **geser untuk mengurutkan** item (diganti "Ubah detail → kelompok"). Mode gelap opsional juga belum ada.
+
 Tanggal: 25 November 2026. Branch: `bangil` (commit `65976e1`).
 
 Cara audit: 12 halaman difoto di ukuran laptop (1440×900) dan HP (390×844) memakai Chrome headless, lalu diperiksa satu per satu bersama kodenya. Referensi dikumpulkan dari 9 aplikasi estimasi/RAB yang masih aktif (daftar di bagian akhir).

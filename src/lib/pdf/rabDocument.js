@@ -18,9 +18,10 @@ const PAD = 3;
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 /**
- * @param {{ project, groups, summary, company, preparedBy, materials?: { items: any[], total: number }, logo?: Buffer | null }} rab
+ * @param {{ project, groups, summary, company, preparedBy, materials?: { items: any[], total: number } | null, composition?: object | null, logo?: Buffer | null }} rab
+ * materials & composition diisi hanya untuk PDF versi internal.
  */
-export function generateRabPdfBuffer({ project, groups, summary, company, preparedBy, materials, logo }) {
+export function generateRabPdfBuffer({ project, groups, summary, company, preparedBy, materials, composition, logo }) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', margin: MARGIN, bufferPages: true, info: { Title: `RAB ${project.projectName}` } });
     const chunks = [];
@@ -55,11 +56,12 @@ export function generateRabPdfBuffer({ project, groups, summary, company, prepar
     // ── Identitas proyek ───────────────────────────────────────────────
     doc.font('Helvetica').fontSize(9.5);
     const info = [
+      project.rabNumber && ['Nomor RAB', project.rabNumber],
       ['Pekerjaan', project.projectName],
       ['Pemilik / Klien', project.clientName],
       ['Lokasi', project.location || '-'],
       ['Tanggal', tanggal(new Date())],
-    ];
+    ].filter(Boolean);
     for (const [label, value] of info) {
       const y = doc.y;
       doc.text(label, left, y, { width: 90 });
@@ -158,7 +160,7 @@ export function generateRabPdfBuffer({ project, groups, summary, company, prepar
     doc.text(company?.companyName || ' ', rightX, doc.y, { width: signWidth, align: 'center' });
     const nameY = doc.y + 52;
     doc.font('Helvetica-Bold');
-    doc.text(project.clientName || '(..............................)', left, nameY, { width: signWidth, align: 'center', underline: true });
+    doc.text(project.approvedBy || project.clientName || '(..............................)', left, nameY, { width: signWidth, align: 'center', underline: true });
     doc.text(preparedBy || '(..............................)', rightX, nameY, { width: signWidth, align: 'center', underline: true });
     doc.x = left;
 
@@ -202,6 +204,25 @@ export function generateRabPdfBuffer({ project, groups, summary, company, prepar
       row(cols.map((c) => c.label), { bold: true, fill: '#e5e7eb' });
       materials.items.forEach((m, i) => row([i + 1, m.code, m.name, angka(m.quantity, 3), m.unit, rupiah(m.unitPrice), rupiah(m.amount)]));
       drawSpanRow('PERKIRAAN TOTAL BIAYA BAHAN', rupiah(materials.total), { bold: true, repeatHeader: false });
+    }
+
+    // ── Lampiran internal: komposisi biaya ─────────────────────────────
+    if (composition?.total > 0) {
+      if (doc.y + 150 > bottom()) doc.addPage();
+      else doc.moveDown(1.5);
+      doc.font('Helvetica-Bold').fontSize(11).text('KOMPOSISI BIAYA PEKERJAAN', left, doc.y, { align: 'center', width: TABLE_WIDTH });
+      doc.moveDown(0.5);
+      const parts = [
+        ['Upah tenaga kerja', composition.upah, composition.upahPercent],
+        ['Bahan / material', composition.bahan, composition.bahanPercent],
+        ['Peralatan', composition.alat, composition.alatPercent],
+        ['Overhead & keuntungan', composition.overhead, composition.overheadPercent],
+        ['Item manual (di luar AHSP)', composition.manual, composition.manualPercent],
+      ].filter(([, value]) => value > 0);
+      for (const [label, value, percent] of parts) {
+        drawSpanRow(`${label} (${angka(percent, 1)}%)`, rupiah(value), { repeatHeader: false });
+      }
+      drawSpanRow('JUMLAH HARGA PEKERJAAN', rupiah(composition.total), { bold: true, repeatHeader: false });
     }
 
     // ── Nomor halaman ──────────────────────────────────────────────────

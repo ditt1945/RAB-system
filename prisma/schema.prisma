@@ -154,6 +154,8 @@ model Project {
   createdBy           BigInt        @map("created_by") @db.UnsignedBigInt
   projectName         String        @map("project_name") @db.VarChar(255)
   clientName          String        @map("client_name") @db.VarChar(255)
+  rabNumber           String?       @map("rab_number") @db.VarChar(50)
+  approvedBy          String?       @map("approved_by") @db.VarChar(255)
   location            String?       @db.VarChar(255)
   description         String?       @db.Text
   startDate           DateTime?     @map("start_date") @db.Date

@@ -76,6 +76,8 @@ export const projectSchema = z
   .object({
     projectName: z.string().trim().min(3, 'Nama proyek minimal 3 karakter').max(255),
     clientName: z.string().trim().min(2, 'Nama klien minimal 2 karakter').max(255),
+    rabNumber: optionalText(50),
+    approvedBy: optionalText(255),
     location: optionalText(255),
     description: optionalText(5000),
     startDate: optionalDate,

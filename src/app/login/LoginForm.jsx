@@ -65,12 +65,12 @@ export default function LoginForm({ demo = null, callbackUrl = '/dashboard' }) {
       </button>
 
       {demo && (
-        <div className="border-t border-slate-800 pt-4">
+        <div className="border-t border-slate-200 pt-4">
           <button
             type="button"
             disabled={loading}
             onClick={() => login(demo.email, demo.password)}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-sm font-medium text-amber-200 transition hover:bg-amber-500/20 disabled:opacity-60"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-900 transition hover:bg-amber-100 disabled:opacity-60"
           >
             <Zap className="h-4 w-4" /> Masuk cepat sebagai {demo.email}
           </button>

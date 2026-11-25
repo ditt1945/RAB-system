@@ -101,8 +101,8 @@ export default function AhspForm({ categories, resources, ahsp }) {
           <Field label="Overhead & keuntungan (%)" error={errors.overheadPercent} hint="Permen PUPR: maks. 15%">
             <input type="number" min={0} max={100} step={0.5} className={inputClass} value={form.overheadPercent} onChange={set('overheadPercent')} />
           </Field>
-          <label className="flex items-center gap-2 self-end pb-2 text-sm text-slate-300">
-            <input type="checkbox" checked={form.isActive} onChange={set('isActive')} className="accent-cyan-500" /> Aktif (muncul di katalog)
+          <label className="flex items-center gap-2 self-end pb-2 text-sm text-slate-700">
+            <input type="checkbox" checked={form.isActive} onChange={set('isActive')} className="accent-brand-600" /> Aktif (muncul di katalog)
           </label>
           <Field label="Keterangan" className="sm:col-span-2 lg:col-span-4">
             <textarea rows={2} className={inputClass} value={form.description} onChange={set('description')} />
@@ -140,7 +140,7 @@ export default function AhspForm({ categories, resources, ahsp }) {
                   placeholder="Koefisien"
                   aria-label="Koefisien"
                 />
-                <span className="hidden text-right text-xs tabular-nums text-slate-400 sm:block">
+                <span className="hidden text-right text-xs tabular-nums text-slate-600 sm:block">
                   {resource && c.coefficient ? `${resource.unit} → ${rupiah(Number(c.coefficient) * resource.unitPrice)}` : ''}
                 </span>
                 <button
@@ -161,7 +161,7 @@ export default function AhspForm({ categories, resources, ahsp }) {
           </button>
         </div>
 
-        <dl className="mt-5 grid grid-cols-2 gap-3 rounded-lg border border-slate-800 p-4 text-sm sm:grid-cols-6">
+        <dl className="mt-5 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 p-4 text-sm sm:grid-cols-6">
           {[
             ['A. Upah', preview.upah],
             ['B. Bahan', preview.bahan],
@@ -171,12 +171,12 @@ export default function AhspForm({ categories, resources, ahsp }) {
           ].map(([label, value]) => (
             <div key={label}>
               <dt className="text-xs text-slate-500">{label}</dt>
-              <dd className="tabular-nums text-slate-200">{rupiah(value)}</dd>
+              <dd className="tabular-nums text-slate-800">{rupiah(value)}</dd>
             </div>
           ))}
           <div>
-            <dt className="text-xs text-cyan-300">F. HSP / {form.unit || 'satuan'}</dt>
-            <dd className="font-semibold tabular-nums text-cyan-200">{rupiah(preview.unitPrice)}</dd>
+            <dt className="text-xs text-brand-700">F. HSP / {form.unit || 'satuan'}</dt>
+            <dd className="font-semibold tabular-nums text-brand-700">{rupiah(preview.unitPrice)}</dd>
           </div>
         </dl>
       </Card>

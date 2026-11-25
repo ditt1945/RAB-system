@@ -11,7 +11,7 @@ export default async function NewProjectPage() {
   return (
     <AppShell user={user}>
       <ProjectSteps current="data" />
-      <PageHeader title="Proyek baru" description="Isi data proyek. Setelah tersimpan, Anda langsung diarahkan ke penyusunan RAB." />
+      <PageHeader title="Proyek baru" description="Isi data utama dulu. Setelah disimpan, Anda langsung masuk ke penyusunan RAB." />
       <ProjectForm />
     </AppShell>
   );

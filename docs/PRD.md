@@ -6,10 +6,10 @@
 | Penyusun | Radittya Vitsava Darma, XII RPL 2 |
 | Jenis | Sistem Website (UKK) |
 | Bidang | Konstruksi & Properti |
-| Versi | 2.1 (v2.0: 20 November 2026; menggantikan `docs/_old/PRD-v1-2026-11-09.md`) |
-| Tanggal | 23 November 2026 |
+| Versi | 2.2 (v2.0: 20 November 2026; menggantikan `docs/_old/PRD-v1-2026-11-09.md`) |
+| Tanggal | 25 November 2026 |
 | Stack | JavaScript, Next.js 16 (App Router), Prisma 7, MySQL/MariaDB, NextAuth, Gemini API, PDFKit |
-| Dokumen terkait | `docs/FLOWCHART.md`, `docs/AUDIT-2026-11-20.md`, `docs/AUDIT-2026-11-23.md` |
+| Dokumen terkait | `docs/FLOWCHART.md`, `docs/AUDIT-2026-11-20.md`, `docs/AUDIT-2026-11-23.md`, `docs/UIUX-AUDIT-2026-11-25.md` |
 
 ---
 
@@ -80,7 +80,8 @@ Kode **F** dipetakan ke 5 fitur di spesifikasi UKK.
 
 | ID | Kebutuhan |
 |---|---|
-| F2.8 | Tambah item dari AHSP: pilih AHSP, isi volume. Nama, satuan, kategori, dan harga satuan terisi otomatis dari AHSP. |
+| F2.8 | Tambah item dari AHSP: pilih AHSP, isi volume. Nama, satuan, kategori, dan harga satuan terisi otomatis dari AHSP. Bisa lewat kolom "Tambah pekerjaan" di atas tabel (cari → Enter → isi volume → Enter, pintasan `/`), tombol "+ Tambah pekerjaan" di bawah tiap kelompok, atau panel tambah item. |
+| F2.8a | **Template RAB** (rumah tipe 36, tipe 45, renovasi ringan): sekumpulan pekerjaan AHSP dengan perkiraan volume, dipakai sebagai titik awal. RAB kosong menawarkan tiga cara mulai: template, saran AI, atau katalog. |
 | F2.9 | Tambah item manual (tanpa AHSP): nama, satuan, volume, harga satuan diketik sendiri. Item ditandai "manual". |
 | F2.10 | Harga satuan disimpan sebagai **snapshot** saat item dibuat, supaya RAB lama tidak berubah sendiri ketika harga master diubah. Ada tombol "Perbarui harga dari AHSP" per item atau per proyek. |
 | F2.11 | `subtotal = volume × harga satuan`, dihitung **di server**. Nilai subtotal dari client diabaikan. |
@@ -124,7 +125,8 @@ Semua angka dihitung dengan `decimal.js` dan dibulatkan 2 desimal per langkah.
 
 | ID | Kebutuhan |
 |---|---|
-| F4.1 | Item RAB bisa diedit (volume, harga untuk item manual, kelompok) dan dihapus dengan konfirmasi. |
+| F4.1 | Volume (dan harga item manual) bisa **diketik langsung di sel tabel** seperti spreadsheet: Enter simpan, Esc batal, Tab ke baris berikut. Detail lain (uraian, satuan, kelompok) lewat menu "⋯ → Ubah detail". Item bisa diduplikat. Hapus item langsung berlaku dengan tombol **Batalkan** selama 5 detik. |
+| F4.1a | Baris AHSP bisa dibuka (▸) untuk melihat rincian upah/bahan/alat, harga AHSP terkini, dan tombol pakai harga terkini. Rekap menampilkan **komposisi biaya** (upah, bahan, alat, overhead, item manual). |
 | F4.2 | Ringkasan RAB diperbarui setiap kali item atau parameter proyek berubah. |
 | F4.3 | Data proyek, item, dan AHSP tersimpan di MySQL/MariaDB lewat Prisma, dengan skema yang dibuat dari `prisma migrate` (bisa direproduksi). |
 | F4.4 | Isolasi data: pengguna hanya bisa membaca dan mengubah proyek miliknya sendiri. Akses ke proyek orang lain dibalas 404. |
@@ -135,7 +137,8 @@ Semua angka dihitung dengan `decimal.js` dan dibulatkan 2 desimal per langkah.
 |---|---|
 | F5.1 | Halaman `/projects/[id]/preview` menampilkan RAB dalam format dokumen: kop perusahaan, identitas proyek, tabel (No, Kode AHSP, Uraian Pekerjaan, Volume, Satuan, Harga Satuan, Jumlah) per kelompok dengan subtotal kelompok, rekapitulasi (rumus F2), terbilang, serta tempat & tanggal dan kolom tanda tangan. |
 | F5.2 | Tombol "Export PDF" mengunduh PDF dengan isi **sama persis** dengan preview (A4, nomor halaman, header tabel diulang di setiap halaman). |
-| F5.3 | Nama file: `RAB_<nama-proyek>_<yyyy-mm-dd>.pdf`. |
+| F5.3 | Nama file: `RAB_<nama-proyek>_<yyyy-mm-dd>.pdf` (versi klien: `RAB_<nama-proyek>_klien_<tanggal>.pdf`). |
+| F5.3a | Dua versi dokumen: **Untuk klien** (RAB + rekap) dan **Internal** (ditambah lampiran kebutuhan material dan komposisi biaya). Dipilih di toolbar preview dan menu "⋯" halaman RAB. Nomor RAB dan nama penyetuju (opsional) dicetak di kop dan tanda tangan. |
 | F5.4 | Lampiran "Perkiraan kebutuhan material" (koefisien bahan AHSP × volume item) di halaman proyek, preview, dan PDF. Kolom tanda tangan: "Disetujui oleh pemilik/klien" dan "Dibuat oleh". |
 
 ## 5. Kebutuhan Non-Fungsional
@@ -145,7 +148,7 @@ Semua angka dihitung dengan `decimal.js` dan dibulatkan 2 desimal per langkah.
 | Akurasi | Semua uang memakai `decimal.js` dan kolom DB `DECIMAL`, tanpa float. Angka di layar, preview, dan PDF identik. |
 | Keamanan | bcrypt; session NextAuth; cek kepemilikan di setiap query (`createdBy`); validasi Zod di setiap API; tidak ada secret di repo; tidak ada dump DB berisi user di repo. |
 | Pesan error | Bahasa Indonesia. API mengembalikan 401, 404, atau 422 (dengan detail per field), dan 500 hanya untuk error tak terduga. |
-| Tampilan | Responsif minimal 390 px (HP); tabel bisa di-scroll horizontal. |
+| Tampilan | Tema terang "kertas kerja" dengan satu aksen oranye + navy. Responsif minimal 390 px: di HP item RAB tampil sebagai kartu, total selalu terlihat di bar bawah, dan menu utama di bar navigasi bawah. Input rupiah berformat "Rp 10.000.000". Konfirmasi memakai dialog sendiri, notifikasi memakai toast. |
 | Pengujian | Unit test (Vitest) untuk rumus HSP, rumus RAB, urutan pajak, dan cek kepemilikan. Uji manual mengikuti skenario §8. |
 | Instalasi | `npm install` → isi `.env` → `npx prisma migrate deploy` → `npx prisma db seed` → `npm run dev`. |
 
@@ -193,6 +196,8 @@ Dihapus: `HouseEstimation`, `EstimationAnalytic`, `QuotationRequest`, `ChangeOrd
 | `/api/projects`, `/api/projects/[id]` | GET, POST / GET, PUT, DELETE |
 | `/api/projects/[id]/items`, `/items/[itemId]` | GET, POST / PATCH, DELETE |
 | `/api/projects/[id]/items/reprice` | POST: perbarui harga item dari AHSP |
+| `/api/projects/[id]/items/template` | POST `{ key }`: tambah pekerjaan dari template RAB |
+| `/api/projects/[id]/pdf?version=client\|internal` | GET: PDF versi klien atau internal |
 | `/api/projects/[id]/summary` | GET |
 | `/api/projects/[id]/ai/recommend`, `/ai/accept` | GET (riwayat), POST / POST |
 | `/api/projects/[id]/pdf` | GET |
@@ -234,3 +239,4 @@ Dihapus: `HouseEstimation`, `EstimationAnalytic`, `QuotationRequest`, `ChangeOrd
 | K2 | Master AHSP global atau per pengguna? | **Global**, dikelola admin (§3). |
 | K3 | Perhitungan PPN? | **Standar industri**: PPN 11% dari DPP, total dibulatkan ke bawah per Rp1.000 (§F2). |
 | K4 | Nama aplikasi resmi? | **"Sistem RAB Kontraktor"**. |
+| K5 | Tema tampilan? | **Terang** ("kertas kerja"), supaya layar sama dengan dokumen cetak (25 Nov 2026). |

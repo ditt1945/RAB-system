@@ -6,6 +6,9 @@ import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { api } from '@/lib/client';
 import { rupiah, RESOURCE_TYPE_LABEL, tanggal } from '@/lib/format';
 import { Alert, buttonClass, Card, inputClass } from '@/components/ui';
+import { MoneyInput } from '@/components/inputs';
+import { useConfirm } from '@/components/overlay';
+import { useToast } from '@/components/toast';
 
 const EMPTY = { code: '', name: '', type: 'bahan', unit: '', unitPrice: '', source: '', effectiveDate: '', isActive: true };
 const TYPES = ['upah', 'bahan', 'alat'];
@@ -15,7 +18,8 @@ export default function ResourceManager({ resources, canEdit }) {
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState(null); // { id | 'new', ...fields }
   const [error, setError] = useState(null);
-  const [message, setMessage] = useState(null);
+  const toast = useToast();
+  const [confirm, confirmDialog] = useConfirm();
   const [busy, setBusy] = useState(false);
   const working = busy || pending;
 
@@ -37,23 +41,25 @@ export default function ResourceManager({ resources, canEdit }) {
     if (!res.ok) return setError(Object.values(res.fields)[0]?.[0] ?? res.error);
     setEditing(null);
     setError(null);
-    setMessage(res.data.message);
+    toast(res.data.message);
     startTransition(() => router.refresh());
   };
 
   const remove = async (r) => {
-    if (working || !window.confirm(`Hapus "${r.name}"?`)) return;
+    if (working) return;
+    const yes = await confirm({ title: `Hapus "${r.name}"?`, message: 'Sumber daya yang masih dipakai AHSP tidak bisa dihapus.' });
+    if (!yes) return;
     setBusy(true);
     const res = await api(`/api/resources/${r.id}`, { method: 'DELETE' });
     setBusy(false);
     if (!res.ok) return setError(res.error);
     setError(null);
-    setMessage(res.data.message);
+    toast(res.data.message);
     startTransition(() => router.refresh());
   };
 
   const editRow = (
-    <tr className="bg-cyan-500/5">
+    <tr className="bg-brand-50/60">
       <td className="px-3 py-2">
         <input className={inputClass} value={editing?.code ?? ''} onChange={field('code')} placeholder="M.20" aria-label="Kode" />
       </td>
@@ -74,16 +80,16 @@ export default function ResourceManager({ resources, canEdit }) {
         <input className={inputClass} value={editing?.unit ?? ''} onChange={field('unit')} placeholder="kg" aria-label="Satuan" />
       </td>
       <td className="space-y-1 px-3 py-2">
-        <input type="number" min={0} className={`${inputClass} text-right`} value={editing?.unitPrice ?? ''} onChange={field('unitPrice')} aria-label="Harga" />
+        <MoneyInput value={editing?.unitPrice ?? ''} onChange={(v) => setEditing((e) => ({ ...e, unitPrice: v }))} aria-label="Harga" />
         <input type="date" className={inputClass} value={editing?.effectiveDate ?? ''} onChange={field('effectiveDate')} aria-label="Tanggal berlaku" />
       </td>
       <td className="px-3 py-2 text-center">
-        <input type="checkbox" checked={!!editing?.isActive} onChange={field('isActive')} className="accent-cyan-500" aria-label="Aktif" />
+        <input type="checkbox" checked={!!editing?.isActive} onChange={field('isActive')} className="accent-brand-600" aria-label="Aktif" />
       </td>
       <td className="px-3 py-2">
         <div className="flex justify-end gap-1">
           <button type="button" onClick={save} disabled={working} className={buttonClass.ghost} title="Simpan" aria-label="Simpan">
-            <Check className="h-4 w-4 text-emerald-400" />
+            <Check className="h-4 w-4 text-emerald-600" />
           </button>
           <button type="button" onClick={cancel} className={buttonClass.ghost} title="Batal" aria-label="Batal">
             <X className="h-4 w-4" />
@@ -105,10 +111,9 @@ export default function ResourceManager({ resources, canEdit }) {
     >
       <div className="space-y-4">
         <Alert>{error}</Alert>
-        {message && !error && <Alert type="success">{message}</Alert>}
         <div className="-mx-5 overflow-x-auto">
           <table className="w-full min-w-[760px] text-sm">
-            <thead className="border-y border-slate-800 text-left text-xs text-slate-400">
+            <thead className="border-y border-slate-200 bg-navy-50 text-left text-xs font-semibold uppercase tracking-wide text-navy-800">
               <tr>
                 <th className="w-28 px-3 py-2 font-medium">Kode</th>
                 <th className="px-3 py-2 font-medium">Nama</th>
@@ -119,12 +124,12 @@ export default function ResourceManager({ resources, canEdit }) {
                 <th className="w-24 px-3 py-2" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/70">
+            <tbody className="divide-y divide-slate-100">
               {editing?.id === 'new' && editRow}
               {TYPES.map((type) => (
                 <Fragment key={type}>
-                  <tr className="bg-slate-800/40">
-                    <td colSpan={7} className="px-3 py-2 text-xs font-semibold uppercase text-cyan-300">
+                  <tr className="bg-slate-50">
+                    <td colSpan={7} className="px-3 py-2 text-xs font-semibold uppercase text-brand-700">
                       {RESOURCE_TYPE_LABEL[type]}
                     </td>
                   </tr>
@@ -135,17 +140,17 @@ export default function ResourceManager({ resources, canEdit }) {
                         <Fragment key={r.id}>{editRow}</Fragment>
                       ) : (
                         <tr key={r.id} className={r.isActive ? '' : 'opacity-50'}>
-                          <td className="px-3 py-2 font-mono text-xs text-slate-400">{r.code}</td>
+                          <td className="px-3 py-2 font-mono text-xs text-slate-600">{r.code}</td>
                           <td className="px-3 py-2">
-                            <p className="text-slate-100">{r.name}</p>
+                            <p className="text-slate-900">{r.name}</p>
                             <p className="text-[11px] text-slate-500">
                               {r.source || 'Sumber tidak dicatat'}
                               {r.effectiveDate ? ` · berlaku ${tanggal(r.effectiveDate)}` : ''} · dipakai {r._count.components} AHSP
                             </p>
                           </td>
-                          <td className="px-3 py-2 text-slate-300">{RESOURCE_TYPE_LABEL[r.type]}</td>
-                          <td className="px-3 py-2 text-slate-300">{r.unit}</td>
-                          <td className="px-3 py-2 text-right tabular-nums text-white">{rupiah(r.unitPrice)}</td>
+                          <td className="px-3 py-2 text-slate-700">{RESOURCE_TYPE_LABEL[r.type]}</td>
+                          <td className="px-3 py-2 text-slate-700">{r.unit}</td>
+                          <td className="px-3 py-2 text-right tabular-nums text-navy-900">{rupiah(r.unitPrice)}</td>
                           <td className="px-3 py-2 text-center text-xs">{r.isActive ? 'Ya' : 'Tidak'}</td>
                           <td className="px-3 py-2">
                             {canEdit && (
@@ -154,7 +159,7 @@ export default function ResourceManager({ resources, canEdit }) {
                                   <Pencil className="h-3.5 w-3.5" />
                                 </button>
                                 <button type="button" onClick={() => remove(r)} disabled={working} className={buttonClass.ghost} title="Hapus" aria-label={`Hapus ${r.name}`}>
-                                  <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                                  <Trash2 className="h-3.5 w-3.5 text-red-600" />
                                 </button>
                               </div>
                             )}
@@ -168,6 +173,7 @@ export default function ResourceManager({ resources, canEdit }) {
           </table>
         </div>
       </div>
+      {confirmDialog}
     </Card>
   );
 }

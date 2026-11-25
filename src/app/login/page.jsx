@@ -36,7 +36,7 @@ export default async function LoginPage({ searchParams }) {
       footer={
         <>
           Belum punya akun?{' '}
-          <Link href="/register" className="font-medium text-cyan-300 hover:text-cyan-200">
+          <Link href="/register" className="font-medium text-brand-700 hover:text-brand-800">
             Daftar
           </Link>
         </>

@@ -129,6 +129,35 @@ export function groupRabItems(items, order = []) {
 }
 
 /**
+ * Komposisi biaya RAB: berapa bagian untuk upah, bahan, alat, overhead & profit, dan item manual.
+ * Porsi tiap item AHSP mengikuti rincian AHSP-nya, diskalakan ke harga snapshot item tersebut,
+ * sehingga jumlah semua porsi = jumlah harga pekerjaan.
+ *
+ * @param {Array<{ ahspId?: any, volume: any, unitPrice: any }>} items
+ * @param {Map<string, { upah: number, bahan: number, alat: number, overhead: number, unitPrice: number }>} priceByAhsp
+ */
+export function calculateCostComposition(items, priceByAhsp) {
+  const totals = { upah: d(0), bahan: d(0), alat: d(0), overhead: d(0), manual: d(0) };
+  for (const item of items) {
+    const subtotal = d(calculateRabItemSubtotal(item.volume, item.unitPrice));
+    const price = item.ahspId != null ? priceByAhsp.get(String(item.ahspId)) : null;
+    if (!price || !(price.unitPrice > 0)) {
+      totals.manual = totals.manual.plus(subtotal);
+      continue;
+    }
+    const ratio = subtotal.dividedBy(price.unitPrice);
+    for (const key of ['upah', 'bahan', 'alat', 'overhead']) totals[key] = totals[key].plus(d(price[key]).times(ratio));
+  }
+  const total = Object.values(totals).reduce((sum, v) => sum.plus(v), d(0));
+  const result = { total: money(total).toNumber() };
+  for (const [key, value] of Object.entries(totals)) {
+    result[key] = money(value).toNumber();
+    result[`${key}Percent`] = total.isZero() ? 0 : value.dividedBy(total).times(100).toDecimalPlaces(1).toNumber();
+  }
+  return result;
+}
+
+/**
  * Kebutuhan material (bahan) dari pekerjaan AHSP.
  * Jumlah bahan = Σ (koefisien bahan × volume pekerjaan), dijumlahkan per jenis bahan.
  *

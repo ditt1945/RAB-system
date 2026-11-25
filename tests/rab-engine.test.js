@@ -4,6 +4,7 @@ import {
   calculateRabItemSubtotal,
   calculateProjectSummary,
   calculateMaterialNeeds,
+  calculateCostComposition,
   groupRabItems,
   LIMITS,
 } from '../src/lib/calculations/rab.js';
@@ -142,6 +143,34 @@ describe('Kebutuhan material', () => {
 
   it('tanpa pekerjaan AHSP, daftar material kosong', () => {
     expect(calculateMaterialNeeds([])).toEqual({ items: [], total: 0 });
+  });
+});
+
+describe('Komposisi biaya', () => {
+  it('memecah jumlah pekerjaan menjadi upah/bahan/alat/overhead/manual dan totalnya sama', () => {
+    const price = calculateAhspPrice({
+      overheadPercent: 10,
+      components: [
+        { coefficient: 1, resource: { type: 'upah', unitPrice: 100 } },
+        { coefficient: 1, resource: { type: 'bahan', unitPrice: 300 } },
+      ],
+    }); // dasar 400, overhead 40, HSP 440
+    const result = calculateCostComposition(
+      [
+        { ahspId: '1', volume: 2, unitPrice: 440 },
+        { ahspId: null, volume: 1, unitPrice: 120 },
+      ],
+      new Map([['1', price]]),
+    );
+    expect([result.upah, result.bahan, result.alat, result.overhead, result.manual]).toEqual([200, 600, 0, 80, 120]);
+    expect(result.total).toBe(1000);
+    expect(result.bahanPercent).toBe(60);
+  });
+
+  it('item dengan harga snapshot lama diskalakan ke harga snapshotnya', () => {
+    const price = { upah: 50, bahan: 50, alat: 0, overhead: 0, unitPrice: 100 };
+    const result = calculateCostComposition([{ ahspId: 7, volume: 1, unitPrice: 80 }], new Map([['7', price]]));
+    expect([result.upah, result.bahan, result.total]).toEqual([40, 40, 80]);
   });
 });
 

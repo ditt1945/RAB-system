@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Alert, buttonClass, Card, EmptyState, inputClass } from '@/components/ui';
+import { useConfirm } from '@/components/overlay';
+import { useToast } from '@/components/toast';
 
 const EMPTY = { code: '', name: '', sortOrder: '' };
 
@@ -15,7 +17,8 @@ export default function CategoryManager({ categories, canEdit }) {
   const [editing, setEditing] = useState(null); // { id | 'new', code, name, sortOrder }
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
-  const [message, setMessage] = useState(null);
+  const toast = useToast();
+  const [confirm, confirmDialog] = useConfirm();
   const working = busy || pending;
 
   const field = (key) => (e) => setEditing((v) => ({ ...v, [key]: e.target.value }));
@@ -32,7 +35,7 @@ export default function CategoryManager({ categories, canEdit }) {
   const done = (msg) => {
     setEditing(null);
     setError(null);
-    setMessage(msg);
+    toast(msg);
     startTransition(() => router.refresh());
   };
 
@@ -50,7 +53,8 @@ export default function CategoryManager({ categories, canEdit }) {
   };
 
   const remove = async (category) => {
-    if (working || !window.confirm(`Hapus kategori "${category.name}"?`)) return;
+    if (working) return;
+    if (!(await confirm({ title: `Hapus kategori "${category.name}"?` }))) return;
     setBusy(true);
     const res = await api(`/api/ahsp-categories/${category.id}`, { method: 'DELETE' });
     setBusy(false);
@@ -66,7 +70,7 @@ export default function CategoryManager({ categories, canEdit }) {
   };
 
   const editRow = (key) => (
-    <tr key={key} className="bg-cyan-500/5" onKeyDown={keys}>
+    <tr key={key} className="bg-brand-50/60" onKeyDown={keys}>
       <td className="px-3 py-2">
         <input type="number" min={0} className={`${inputClass} text-right`} value={editing?.sortOrder ?? ''} onChange={field('sortOrder')} aria-label="Urutan" />
       </td>
@@ -80,7 +84,7 @@ export default function CategoryManager({ categories, canEdit }) {
       <td className="px-3 py-2">
         <div className="flex justify-end gap-1">
           <button type="button" onClick={save} disabled={working} className={buttonClass.ghost} title="Simpan (Enter)" aria-label="Simpan">
-            <Check className="h-4 w-4 text-emerald-400" />
+            <Check className="h-4 w-4 text-emerald-600" />
           </button>
           <button type="button" onClick={cancel} className={buttonClass.ghost} title="Batal (Esc)" aria-label="Batal">
             <X className="h-4 w-4" />
@@ -102,13 +106,12 @@ export default function CategoryManager({ categories, canEdit }) {
     >
       <div className="space-y-4">
         <Alert>{error}</Alert>
-        {message && !error && <Alert type="success">{message}</Alert>}
         {categories.length === 0 && editing?.id !== 'new' ? (
           <EmptyState title="Belum ada kategori" description="Buat kategori dulu (mis. Pekerjaan Persiapan) sebelum menambah AHSP." />
         ) : (
           <div className="-mx-5 overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
-              <thead className="border-y border-slate-800 text-left text-xs text-slate-400">
+              <thead className="border-y border-slate-200 bg-navy-50 text-left text-xs font-semibold uppercase tracking-wide text-navy-800">
                 <tr>
                   <th className="w-24 px-3 py-2 text-right font-medium">Urutan</th>
                   <th className="w-36 px-3 py-2 font-medium">Kode</th>
@@ -117,16 +120,16 @@ export default function CategoryManager({ categories, canEdit }) {
                   <th className="w-24 px-3 py-2" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/70">
+              <tbody className="divide-y divide-slate-100">
                 {categories.map((c) =>
                   editing?.id === c.id ? (
                     editRow(c.id)
                   ) : (
                     <tr key={c.id}>
-                      <td className="px-3 py-2 text-right tabular-nums text-slate-400">{c.sortOrder}</td>
-                      <td className="px-3 py-2 font-mono text-xs text-slate-400">{c.code}</td>
-                      <td className="px-3 py-2 text-slate-100">{c.name}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-slate-300">{c._count.ahsp}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-slate-600">{c.sortOrder}</td>
+                      <td className="px-3 py-2 font-mono text-xs text-slate-600">{c.code}</td>
+                      <td className="px-3 py-2 text-slate-900">{c.name}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-slate-700">{c._count.ahsp}</td>
                       <td className="px-3 py-2">
                         {canEdit && (
                           <div className="flex justify-end gap-1">
@@ -151,7 +154,7 @@ export default function CategoryManager({ categories, canEdit }) {
                               title={c._count.ahsp > 0 ? 'Masih dipakai AHSP' : 'Hapus'}
                               aria-label={`Hapus ${c.name}`}
                             >
-                              <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                              <Trash2 className="h-3.5 w-3.5 text-red-600" />
                             </button>
                           </div>
                         )}
@@ -165,6 +168,7 @@ export default function CategoryManager({ categories, canEdit }) {
           </div>
         )}
       </div>
+      {confirmDialog}
     </Card>
   );
 }

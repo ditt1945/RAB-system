@@ -14,14 +14,20 @@ export const metadata = { title: 'Preview RAB - Sistem RAB Kontraktor' };
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const cell = 'border border-slate-400 px-2 py-1';
+const VERSIONS = [
+  { key: 'internal', label: 'Internal', hint: 'Dengan lampiran kebutuhan material dan komposisi biaya.' },
+  { key: 'client', label: 'Untuk klien', hint: 'RAB dan rekap saja, tanpa lampiran internal.' },
+];
 
-export default async function PreviewPage({ params }) {
+export default async function PreviewPage({ params, searchParams }) {
   const user = await requirePageUser();
   const { id } = await params;
+  const version = (await searchParams).versi === 'klien' ? 'client' : 'internal';
   const rab = await loadProjectRab(parseId(id), user.id);
   if (!rab) notFound();
-  const { project, groups, summary, company, preparedBy, items, materials } = rab;
+  const { project, groups, summary, company, preparedBy, items, materials, composition } = rab;
   const isEmpty = items.length === 0;
+  const internal = version === 'internal';
 
   const recap = [
     ['JUMLAH HARGA PEKERJAAN', rupiah(summary.itemsSubtotal), true],
@@ -34,24 +40,51 @@ export default async function PreviewPage({ params }) {
     ['DIBULATKAN', rupiah(summary.grandTotal), true],
   ].filter(Boolean);
 
+  const compositionRows = [
+    ['Upah tenaga kerja', 'upah'],
+    ['Bahan / material', 'bahan'],
+    ['Peralatan', 'alat'],
+    ['Overhead & keuntungan', 'overhead'],
+    ['Item manual (di luar AHSP)', 'manual'],
+  ].filter(([, key]) => composition[key] > 0);
+
   return (
-    <div className="min-h-screen bg-slate-200 py-6 print:bg-white print:py-0">
-      <div className="mx-auto mb-4 flex max-w-[210mm] flex-wrap items-start justify-between gap-2 px-4 print:hidden">
-        <Link href={`/projects/${id}`} className="inline-flex items-center gap-1.5 py-2 text-sm text-slate-700 hover:text-slate-950">
-          <ArrowLeft className="h-4 w-4" /> Kembali ke penyusunan RAB
-        </Link>
-        {!isEmpty && (
-          <div className="flex gap-2">
-            <PrintButton />
-            <PdfButton projectId={id} />
-          </div>
-        )}
+    <div className="min-h-screen bg-slate-200 print:bg-white">
+      {/* Toolbar menempel di atas saat dokumen digulir */}
+      <div className="sticky top-0 z-30 border-b border-slate-300 bg-white/95 backdrop-blur print:hidden">
+        <div className="mx-auto flex max-w-[210mm] flex-wrap items-center justify-between gap-2 px-4 py-2.5">
+          <Link href={`/projects/${id}`} className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-navy-900">
+            <ArrowLeft className="h-4 w-4" /> <span className="hidden sm:inline">Kembali ke</span> RAB
+          </Link>
+          {!isEmpty && (
+            <div className="flex items-center gap-2">
+              <div className="flex rounded-lg bg-slate-100 p-0.5 text-[13px]" role="group" aria-label="Versi dokumen">
+                {VERSIONS.map((v) => (
+                  <Link
+                    key={v.key}
+                    href={v.key === 'client' ? `?versi=klien` : '?'}
+                    replace
+                    scroll={false}
+                    title={v.hint}
+                    aria-current={version === v.key ? 'true' : undefined}
+                    className={`rounded-md px-2.5 py-1.5 font-medium ${version === v.key ? 'bg-white text-navy-900 shadow-xs' : 'text-slate-600 hover:text-navy-900'}`}
+                  >
+                    {v.label}
+                  </Link>
+                ))}
+              </div>
+              <PrintButton />
+              <PdfButton projectId={id} version={version} label="PDF" />
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="mx-auto mb-4 max-w-[210mm] space-y-3 px-4 print:hidden">
-        <ProjectSteps current="preview" projectId={id} hasItems={!isEmpty} light />
+      <div className="mx-auto max-w-[210mm] space-y-3 px-4 py-4 print:hidden">
+        <ProjectSteps current="preview" projectId={id} hasItems={!isEmpty} />
+        <p className="text-xs text-slate-600">{VERSIONS.find((v) => v.key === version).hint} Hasil cetak dan PDF sama dengan tampilan ini.</p>
         {!company?.companyName && (
-          <p className="rounded-lg border border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             Kop perusahaan belum diisi, jadi dokumen ini tampil tanpa kop.{' '}
             <Link href="/company-settings" className="font-semibold underline">
               Lengkapi data perusahaan
@@ -59,17 +92,17 @@ export default async function PreviewPage({ params }) {
           </p>
         )}
         {isEmpty && (
-          <p className="rounded-lg border border-slate-400 bg-white px-4 py-3 text-sm text-slate-700">
+          <p className="rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700">
             RAB masih kosong, jadi belum bisa dicetak atau di-export.{' '}
             <Link href={`/projects/${id}`} className="font-semibold underline">
-              Tambahkan item pekerjaan
+              Tambahkan pekerjaan
             </Link>
           </p>
         )}
       </div>
 
       {/* Di layar sempit dokumen bisa digeser ke samping; ukuran A4 tetap terjaga */}
-      <div className="overflow-x-auto px-2 sm:px-4 print:overflow-visible print:px-0">
+      <div className="overflow-x-auto px-2 pb-10 sm:px-4 print:overflow-visible print:p-0">
         <article className="mx-auto w-[210mm] min-w-[210mm] bg-white px-[12mm] py-[14mm] text-[12px] leading-snug text-slate-900 shadow-lg print:w-auto print:min-w-0 print:p-0 print:shadow-none">
           {company?.companyName && (
             <header className="mb-4 flex items-center gap-4 border-b-2 border-slate-900 pb-2">
@@ -79,9 +112,7 @@ export default async function PreviewPage({ params }) {
               )}
               <div className="flex-1 text-center">
                 <p className="text-lg font-bold uppercase">{company.companyName}</p>
-                <p className="text-[11px] text-slate-600">
-                  {[company.address, company.phone && `Telp. ${company.phone}`, company.email].filter(Boolean).join(' · ')}
-                </p>
+                <p className="text-[11px] text-slate-600">{[company.address, company.phone && `Telp. ${company.phone}`, company.email].filter(Boolean).join(' · ')}</p>
               </div>
               {company.logoUrl && <span className="w-14 shrink-0" aria-hidden />}
             </header>
@@ -92,16 +123,19 @@ export default async function PreviewPage({ params }) {
           <table className="mb-4">
             <tbody>
               {[
+                project.rabNumber && ['Nomor RAB', project.rabNumber],
                 ['Pekerjaan', project.projectName],
                 ['Pemilik / Klien', project.clientName],
                 ['Lokasi', project.location || '-'],
                 ['Tanggal', tanggal(new Date())],
-              ].map(([label, value]) => (
-                <tr key={label}>
-                  <td className="w-32 pr-2 align-top">{label}</td>
-                  <td className="align-top">: {value}</td>
-                </tr>
-              ))}
+              ]
+                .filter(Boolean)
+                .map(([label, value]) => (
+                  <tr key={label}>
+                    <td className="w-32 pr-2 align-top">{label}</td>
+                    <td className="align-top">: {value}</td>
+                  </tr>
+                ))}
             </tbody>
           </table>
 
@@ -169,7 +203,7 @@ export default async function PreviewPage({ params }) {
               <p>&nbsp;</p>
               <p>Disetujui oleh,</p>
               <p>Pemilik / Klien</p>
-              <p className="mt-16 font-bold underline">{project.clientName}</p>
+              <p className="mt-16 font-bold underline">{project.approvedBy || project.clientName}</p>
             </div>
             <div>
               <p>
@@ -181,7 +215,7 @@ export default async function PreviewPage({ params }) {
             </div>
           </div>
 
-          {materials.items.length > 0 && (
+          {internal && materials.items.length > 0 && (
             <section className="mt-10 break-before-page">
               <h2 className="text-center text-sm font-bold">LAMPIRAN: PERKIRAAN KEBUTUHAN MATERIAL</h2>
               <p className="mb-3 text-center text-[11px] text-slate-600">
@@ -216,6 +250,28 @@ export default async function PreviewPage({ params }) {
                       PERKIRAAN TOTAL BIAYA BAHAN
                     </td>
                     <td className={`${cell} text-right tabular-nums`}>{rupiah(materials.total)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
+          )}
+
+          {internal && compositionRows.length > 0 && (
+            <section className="mt-8 break-inside-avoid">
+              <h2 className="mb-2 text-center text-sm font-bold">KOMPOSISI BIAYA PEKERJAAN</h2>
+              <table className="w-full border-collapse">
+                <tbody>
+                  {compositionRows.map(([label, key]) => (
+                    <tr key={key}>
+                      <td className={`${cell} text-right`}>
+                        {label} ({angka(composition[`${key}Percent`], 1)}%)
+                      </td>
+                      <td className={`${cell} w-28 text-right tabular-nums`}>{rupiah(composition[key])}</td>
+                    </tr>
+                  ))}
+                  <tr className="font-bold">
+                    <td className={`${cell} text-right`}>JUMLAH HARGA PEKERJAAN</td>
+                    <td className={`${cell} w-28 text-right tabular-nums`}>{rupiah(composition.total)}</td>
                   </tr>
                 </tbody>
               </table>

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { serialize } from '@/lib/api';
 import {
   calculateAhspPrice,
+  calculateCostComposition,
   calculateMaterialNeeds,
   calculateProjectSummary,
   calculateRabItemSubtotal,
@@ -134,11 +135,41 @@ export async function loadProjectRab(projectId, userId) {
     rabTaxPercent: project.rabTaxPercent,
   });
 
-  // Kebutuhan material dihitung dari koefisien bahan AHSP terkini × volume item
-  const materialsByAhsp = await loadAhspMaterials(items.map((i) => i.ahspId));
+  // Rincian AHSP terkini untuk item ber-AHSP: dipakai untuk kebutuhan material,
+  // komposisi biaya (upah/bahan/alat), dan rincian yang bisa dibuka per baris.
+  const ahspIds = [...new Set(items.filter((i) => i.ahspId).map((i) => BigInt(i.ahspId)))];
+  const ahspList = ahspIds.length ? await prisma.ahsp.findMany({ where: { id: { in: ahspIds } }, include: ahspInclude }) : [];
+  const priceByAhsp = new Map();
+  const ahspBreakdown = {};
+  const componentsByAhsp = new Map();
+  for (const ahsp of ahspList) {
+    const key = ahsp.id.toString();
+    const price = calculateAhspPrice(ahsp);
+    priceByAhsp.set(key, price);
+    componentsByAhsp.set(key, serialize(ahsp.components));
+    ahspBreakdown[key] = {
+      overheadPercent: Number(ahsp.overheadPercent),
+      unitPrice: price.unitPrice,
+      upah: price.upah,
+      bahan: price.bahan,
+      alat: price.alat,
+      overhead: price.overhead,
+      lines: price.lines.map((line) => ({
+        code: line.resource.code,
+        name: line.resource.name,
+        type: line.resource.type,
+        unit: line.resource.unit,
+        coefficient: Number(line.coefficient),
+        unitPrice: Number(line.resource.unitPrice),
+        amount: line.amount,
+      })),
+    };
+  }
+
   const materials = calculateMaterialNeeds(
-    items.filter((i) => i.ahspId).map((i) => ({ volume: i.volume, components: materialsByAhsp.get(i.ahspId) ?? [] })),
+    items.filter((i) => i.ahspId).map((i) => ({ volume: i.volume, components: componentsByAhsp.get(String(i.ahspId)) ?? [] })),
   );
+  const composition = calculateCostComposition(items, priceByAhsp);
 
   return {
     project: serialize(rest),
@@ -146,6 +177,8 @@ export async function loadProjectRab(projectId, userId) {
     groups: groupRabItems(items, categoryOrder),
     summary,
     materials,
+    composition,
+    ahspBreakdown,
     company: serialize(creator.companySettings),
     preparedBy: creator.name,
   };

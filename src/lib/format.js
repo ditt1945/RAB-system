@@ -13,6 +13,33 @@ export function tanggal(value) {
   return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(value));
 }
 
+/** 25 Nov 2026 */
+export function tanggalPendek(value) {
+  if (!value) return '-';
+  return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value));
+}
+
+/** "baru saja", "3 jam lalu", "2 hari lalu", lalu tanggal pendek untuk lebih dari seminggu */
+export function waktuRelatif(value, now = new Date()) {
+  if (!value) return '-';
+  const minutes = Math.floor((now - new Date(value)) / 60000);
+  if (minutes < 1) return 'baru saja';
+  if (minutes < 60) return `${minutes} menit lalu`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} jam lalu`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} hari lalu`;
+  return tanggalPendek(value);
+}
+
+/** Rp47,5 jt / Rp1,2 M: untuk angka besar di kartu ringkas */
+export function rupiahRingkas(value) {
+  const n = Number(value) || 0;
+  if (Math.abs(n) >= 1e9) return `Rp${angka(n / 1e9, 1)} M`;
+  if (Math.abs(n) >= 1e6) return `Rp${angka(n / 1e6, 1)} jt`;
+  return rupiah(n);
+}
+
 export const STATUS_LABEL = {
   planning: 'Perencanaan',
   progress: 'Berjalan',

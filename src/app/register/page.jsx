@@ -17,7 +17,7 @@ export default async function RegisterPage() {
       footer={
         <>
           Sudah punya akun?{' '}
-          <Link href="/login" className="font-medium text-cyan-300 hover:text-cyan-200">
+          <Link href="/login" className="font-medium text-brand-700 hover:text-brand-800">
             Masuk
           </Link>
         </>

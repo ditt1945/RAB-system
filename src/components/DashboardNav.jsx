@@ -1,101 +1,97 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import { Building2, Calculator, FolderKanban, LayoutDashboard, LogOut, Menu, Settings, X } from 'lucide-react';
+import { Building2, Calculator, ChevronDown, FolderKanban, LayoutDashboard, LogOut, UserRound } from 'lucide-react';
+import { ActionMenu } from '@/components/overlay';
+import Logo from '@/components/Logo';
 
 const LINKS = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/projects', label: 'Proyek', icon: FolderKanban },
-  { href: '/ahsp', label: 'Master AHSP', icon: Calculator },
-  { href: '/company-settings', label: 'Perusahaan', icon: Building2 },
-  { href: '/profile', label: 'Akun', icon: Settings },
+  { href: '/dashboard', label: 'Dashboard', short: 'Beranda', icon: LayoutDashboard },
+  { href: '/projects', label: 'Proyek', short: 'Proyek', icon: FolderKanban },
+  { href: '/ahsp', label: 'Master AHSP', short: 'AHSP', icon: Calculator },
 ];
 
+const initials = (name = '') =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join('') || '?';
+
+/**
+ * Laptop: bar atas berisi 3 menu utama + menu avatar (Data perusahaan, Akun, Keluar).
+ * HP: bar atas hanya logo + avatar, menu utama pindah ke bar bawah supaya mudah dijangkau jempol.
+ */
 export default function DashboardNav({ user, wide = false }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
   const isActive = (href) => pathname === href || pathname.startsWith(`${href}/`);
+  const roleLabel = user?.role === 'admin' ? 'Admin' : 'Estimator';
+
+  const accountMenu = [
+    { label: 'Data perusahaan', icon: Building2, href: '/company-settings' },
+    { label: 'Pengaturan akun', icon: UserRound, href: '/profile' },
+    { label: 'Keluar', icon: LogOut, danger: true, onClick: () => signOut({ callbackUrl: '/login' }) },
+  ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/90 backdrop-blur print:hidden">
-      <div className={`mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 ${wide ? 'max-w-[90rem]' : 'max-w-7xl'}`}>
-        <div className="flex items-center gap-8">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#e2673d] text-xs font-black text-white">RK</span>
-            <span className="text-base font-extrabold tracking-tight text-white">
-              Sistem RAB <span className="text-[#e2673d]">Kontraktor</span>
-            </span>
-          </Link>
-
-          <nav className="hidden items-center gap-1 lg:flex" aria-label="Menu utama">
-            {LINKS.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                  isActive(href) ? 'bg-cyan-500/10 text-cyan-300' : 'text-slate-400 hover:bg-slate-900 hover:text-white'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="hidden text-right sm:block">
-            <p className="text-xs font-medium text-white">{user?.name}</p>
-            <p className="text-[11px] text-slate-500">{user?.role === 'admin' ? 'Admin' : 'Estimator'}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => signOut({ callbackUrl: '/login' })}
-            className="hidden items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-red-500/30 hover:text-red-400 sm:flex"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            Keluar
-          </button>
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            className="rounded-lg border border-slate-800 p-2 text-slate-300 lg:hidden"
-            aria-label={open ? 'Tutup menu' : 'Buka menu'}
-            aria-expanded={open}
-          >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
-      </div>
-
-      {open && (
-        <nav className="border-t border-slate-800 px-4 py-3 lg:hidden" aria-label="Menu utama (mobile)">
-          {LINKS.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm ${
-                isActive(href) ? 'bg-cyan-500/10 text-cyan-300' : 'text-slate-300 hover:bg-slate-900'
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
+    <>
+      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur print:hidden">
+        <div className={`mx-auto flex h-14 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 ${wide ? 'max-w-[90rem]' : 'max-w-6xl'}`}>
+          <div className="flex items-center gap-6">
+            <Link href="/dashboard" aria-label="Sistem RAB Kontraktor, ke dashboard">
+              <Logo />
             </Link>
-          ))}
-          <button
-            type="button"
-            onClick={() => signOut({ callbackUrl: '/login' })}
-            className="mt-1 flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm text-red-300 hover:bg-slate-900"
+            <nav className="hidden items-center gap-1 md:flex" aria-label="Menu utama">
+              {LINKS.map(({ href, label, icon: Icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-current={isActive(href) ? 'page' : undefined}
+                  className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition ${
+                    isActive(href) ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          <ActionMenu
+            items={accountMenu}
+            label="Menu akun"
+            buttonClassName="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 text-left transition hover:bg-slate-100"
           >
-            <LogOut className="h-4 w-4" />
-            Keluar ({user?.name})
-          </button>
-        </nav>
-      )}
-    </header>
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-navy-800 text-xs font-semibold text-white">{initials(user?.name)}</span>
+            <span className="hidden text-left leading-tight sm:block">
+              <span className="block text-[13px] font-medium text-slate-900">{user?.name}</span>
+              <span className="block text-[11px] text-slate-500">{roleLabel}</span>
+            </span>
+            <ChevronDown className="h-4 w-4 text-slate-400" />
+          </ActionMenu>
+        </div>
+      </header>
+
+      <nav
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden print:hidden"
+        aria-label="Menu utama (HP)"
+      >
+        {LINKS.map(({ href, short, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            aria-current={isActive(href) ? 'page' : undefined}
+            className={`flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${isActive(href) ? 'text-brand-700' : 'text-slate-500'}`}
+          >
+            <Icon className="h-5 w-5" />
+            {short}
+          </Link>
+        ))}
+      </nav>
+    </>
   );
 }
