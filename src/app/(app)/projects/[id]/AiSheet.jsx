@@ -182,7 +182,7 @@ export default function AiSheet({ open, onClose, projectId, hasCatalog, projectD
                           <span className="min-w-0">
                             <span className="block text-sm text-slate-900">
                               {s.name}
-                              {inRab(s) && <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">Sudah ada di RAB</span>}
+                              {inRab(s) && <span className="ml-2 inline-block whitespace-nowrap rounded-full bg-amber-100 px-1.5 py-0.5 align-middle text-[11px] font-medium text-amber-800">Sudah ada di RAB</span>}
                             </span>
                             <span className="block text-xs text-slate-500">
                               {s.code} · {rupiah(s.unitPrice)}/{s.unit}

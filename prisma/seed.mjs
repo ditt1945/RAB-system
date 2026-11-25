@@ -168,6 +168,27 @@ async function seedAdmin() {
   return admin;
 }
 
+/** Akun estimator contoh: untuk menunjukkan perbedaan hak akses admin vs estimator saat demo. */
+async function seedEstimator() {
+  const email = (process.env.SEED_ESTIMATOR_EMAIL || 'estimator@rab.local').toLowerCase();
+  if (await prisma.user.findUnique({ where: { email } })) {
+    console.log(`Estimator ${email} sudah ada, dilewati.`);
+    return;
+  }
+  const generated = !process.env.SEED_ESTIMATOR_PASSWORD;
+  const password = process.env.SEED_ESTIMATOR_PASSWORD || randomBytes(9).toString('base64url');
+  await prisma.user.create({
+    data: {
+      name: 'Estimator Demo',
+      email,
+      password: await bcrypt.hash(password, 12),
+      profileSettings: { create: { role: 'estimator', department: 'Estimator' } },
+    },
+  });
+  console.log(`Estimator dibuat: ${email}`);
+  if (generated) console.log(`Password estimator (simpan, hanya tampil sekali): ${password}`);
+}
+
 async function seedDemoProject(admin) {
   const count = await prisma.project.count({ where: { createdBy: admin.id } });
   if (count > 0) return;
@@ -220,6 +241,7 @@ async function seedDemoProject(admin) {
 try {
   await seedAhsp();
   const admin = await seedAdmin();
+  await seedEstimator();
   await seedDemoProject(admin);
 } finally {
   await prisma.$disconnect();

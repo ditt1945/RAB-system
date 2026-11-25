@@ -11,9 +11,11 @@ export class AiBusyError extends Error {}
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const isTimeout = (error) => error?.name === 'AbortError' || /timeout|aborted/i.test(String(error?.message));
-const isBusy = (error) => [429, 500, 503].includes(error?.status);
+// Sibuk (429/5xx) atau koneksi terputus ("fetch failed", ECONNRESET, ...): layak dicoba ulang / dialihkan ke model cadangan
+const isBusy = (error) =>
+  [429, 500, 502, 503, 504].includes(error?.status) || /fetch failed|ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|socket hang up/i.test(String(error?.message));
 
-/** Panggil satu model; kalau sibuk (429/503) coba sekali lagi setelah jeda singkat. */
+/** Panggil satu model; kalau sibuk atau koneksi terputus, coba sekali lagi setelah jeda singkat. */
 async function generateWithRetry(model, message) {
   for (let attempt = 0; ; attempt += 1) {
     try {
@@ -31,10 +33,17 @@ async function generateWithRetry(model, message) {
  * Coba model utama dulu; kalau sedang penuh, pakai model cadangan yang lebih ringan.
  * Model Gemini kadang "high demand" untuk sementara, jadi cadangan membuat fitur AI tetap jalan.
  */
+// Kalau model utama baru saja penuh, 5 menit berikutnya langsung pakai model cadangan
+// supaya pengguna tidak menunggu model utama gagal lagi.
+const BUSY_MEMORY_MS = 5 * 60 * 1000;
+const busyUntil = new Map();
+
 async function generateWithFallback(genAI, message) {
   const primary = process.env.GEMINI_MODEL || 'gemini-flash-latest';
   const fallback = process.env.GEMINI_FALLBACK_MODEL || 'gemini-flash-lite-latest';
-  const models = primary === fallback ? [primary] : [primary, fallback];
+  const candidates = primary === fallback ? [primary] : [primary, fallback];
+  // Model yang sedang ditandai sibuk dipindah ke urutan terakhir (tetap dicoba kalau yang lain gagal)
+  const models = [...candidates].sort((a, b) => Number((busyUntil.get(a) ?? 0) > Date.now()) - Number((busyUntil.get(b) ?? 0) > Date.now()));
 
   let lastError;
   for (const name of models) {
@@ -44,13 +53,16 @@ async function generateWithFallback(genAI, message) {
         systemInstruction: SYSTEM_PROMPT,
         generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
       },
-      { timeout: 40_000 }, // batas waktu per percobaan
+      { timeout: 30_000 }, // batas waktu per percobaan
     );
     try {
-      return await generateWithRetry(model, message);
+      const result = await generateWithRetry(model, message);
+      busyUntil.delete(name);
+      return result;
     } catch (error) {
       if (!(error instanceof AiBusyError)) throw error;
       console.warn(`[AI] model ${name} sibuk, mencoba model berikutnya`);
+      busyUntil.set(name, Date.now() + BUSY_MEMORY_MS);
       lastError = error;
     }
   }

@@ -26,8 +26,14 @@ export default async function LoginPage({ searchParams }) {
   if (await getServerSession(authOptions)) redirect(callbackUrl);
 
   // Shortcut login untuk development saja. Di production (npm run build/start) tombolnya tidak ada.
-  const { DEMO_LOGIN_EMAIL: email, DEMO_LOGIN_PASSWORD: password } = process.env;
-  const demo = process.env.NODE_ENV === 'development' && email && password ? { email, password } : null;
+  const env = process.env;
+  const demos =
+    env.NODE_ENV === 'development'
+      ? [
+          { role: 'Admin', email: env.DEMO_LOGIN_EMAIL, password: env.DEMO_LOGIN_PASSWORD },
+          { role: 'Estimator', email: env.DEMO_ESTIMATOR_EMAIL, password: env.DEMO_ESTIMATOR_PASSWORD },
+        ].filter((d) => d.email && d.password)
+      : [];
 
   return (
     <AuthCard
@@ -42,7 +48,7 @@ export default async function LoginPage({ searchParams }) {
         </>
       }
     >
-      <LoginForm demo={demo} callbackUrl={callbackUrl} />
+      <LoginForm demos={demos} callbackUrl={callbackUrl} />
     </AuthCard>
   );
 }

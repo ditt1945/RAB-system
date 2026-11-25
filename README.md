@@ -11,7 +11,7 @@ Aplikasi web untuk merencanakan dan menghitung **Rencana Anggaran Biaya (RAB)** 
 | Database | MySQL / MariaDB (Prisma ORM) |
 | Target pengguna | UMKM / Pengusaha, Karyawan / Perusahaan |
 
-Dokumen: [PRD](docs/PRD.md) · [Flowchart](docs/FLOWCHART.md) · [Audit 20 Nov](docs/AUDIT-2026-11-20.md) · [Audit 23 Nov](docs/AUDIT-2026-11-23.md) · [Audit UI/UX 25 Nov](docs/UIUX-AUDIT-2026-11-25.md)
+Dokumen: [Laporan uji](docs/LAPORAN-UJI-2026-11-25.md) · [PRD](docs/PRD.md) · [Flowchart](docs/FLOWCHART.md) · [Audit 20 Nov](docs/AUDIT-2026-11-20.md) · [Audit 23 Nov](docs/AUDIT-2026-11-23.md) · [Audit UI/UX 25 Nov](docs/UIUX-AUDIT-2026-11-25.md)
 
 ## Fitur (sesuai spesifikasi UKK)
 
@@ -37,9 +37,9 @@ npx prisma db seed          # data AHSP + akun admin + proyek contoh
 npm run dev                 # http://localhost:3000
 ```
 
-Seed membuat akun admin `admin@rab.local`. Jika `SEED_ADMIN_PASSWORD` tidak diisi, kata sandi acak dicetak sekali di terminal.
+Seed membuat akun admin `admin@rab.local` dan estimator demo `estimator@rab.local`. Jika `SEED_ADMIN_PASSWORD` / `SEED_ESTIMATOR_PASSWORD` tidak diisi, kata sandi acak dicetak sekali di terminal.
 
-Saat development, isi `DEMO_LOGIN_EMAIL` dan `DEMO_LOGIN_PASSWORD` di `.env` untuk memunculkan tombol "Masuk cepat" di halaman login (tidak muncul di production).
+Saat development, isi `DEMO_LOGIN_EMAIL` dan `DEMO_LOGIN_PASSWORD` di `.env` (dan `DEMO_ESTIMATOR_EMAIL` / `DEMO_ESTIMATOR_PASSWORD`) untuk memunculkan tombol "Masuk cepat: Admin / Estimator" di halaman login (tidak muncul di production).
 
 Perintah lain: `npm test` (unit test perhitungan, pembulatan, kebutuhan material, validasi), `npm run lint`, `npm run build`.
 

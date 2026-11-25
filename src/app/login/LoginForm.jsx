@@ -7,11 +7,11 @@ import { ArrowRight, LogIn, Zap } from 'lucide-react';
 import { Alert, buttonClass, Field, inputClass } from '@/components/ui';
 
 /**
- * @param {{ demo?: { email: string, password: string } | null, callbackUrl?: string }} props
- * demo = tombol masuk cepat (hanya dikirim server saat development).
+ * @param {{ demos?: Array<{ role: string, email: string, password: string }>, callbackUrl?: string }} props
+ * demos = tombol masuk cepat per peran (hanya dikirim server saat development).
  * callbackUrl = halaman yang tadi dibuka sebelum diminta login.
  */
-export default function LoginForm({ demo = null, callbackUrl = '/dashboard' }) {
+export default function LoginForm({ demos = [], callbackUrl = '/dashboard' }) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,16 +64,23 @@ export default function LoginForm({ demo = null, callbackUrl = '/dashboard' }) {
         )}
       </button>
 
-      {demo && (
+      {demos.length > 0 && (
         <div className="border-t border-slate-200 pt-4">
-          <button
-            type="button"
-            disabled={loading}
-            onClick={() => login(demo.email, demo.password)}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-900 transition hover:bg-amber-100 disabled:opacity-60"
-          >
-            <Zap className="h-4 w-4" /> Masuk cepat sebagai {demo.email}
-          </button>
+          <p className="mb-2 text-center text-xs font-medium text-slate-600">Masuk cepat (akun demo)</p>
+          <div className={`grid gap-2 ${demos.length > 1 ? 'grid-cols-2' : ''}`}>
+            {demos.map((demo) => (
+              <button
+                key={demo.email}
+                type="button"
+                disabled={loading}
+                onClick={() => login(demo.email, demo.password)}
+                title={demo.email}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm font-medium text-amber-900 transition hover:bg-amber-100 disabled:opacity-60"
+              >
+                <Zap className="h-4 w-4" /> {demo.role}
+              </button>
+            ))}
+          </div>
           <p className="mt-2 text-center text-[11px] text-slate-500">Hanya muncul saat development (npm run dev)</p>
         </div>
       )}
